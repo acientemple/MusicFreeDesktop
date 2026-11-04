@@ -408,6 +408,58 @@ class TrackPlayer {
         }
     }
 
+    /**
+     * 用新条目替换队列里的旧条目，保持原位置，并播放替换后的条目
+     * @returns 队列里是否存在并替换了旧条目
+     */
+    public async replaceMusic(
+        oldItem: IMusic.IMusicItem,
+        newItem: IMusic.IMusicItem,
+        options: { play?: boolean; restartFromStart?: boolean } = {},
+    ) {
+        const { play = true, restartFromStart = true } = options;
+        const queue = this.musicQueue;
+        // indexMap 是覆盖式的，重复条目只会命中最后一个，这里必须按数组下标找
+        const indexes: number[] = [];
+        queue.forEach((item, index) => {
+            if (isSameMedia(item, oldItem)) {
+                indexes.push(index);
+            }
+        });
+        if (!indexes.length) {
+            // 队列里没有旧条目，追加播放即可
+            if (play) {
+                await this.playMusic(newItem);
+            }
+            return false;
+        }
+        const isCurrent = indexes.includes(this.currentIndex);
+        const newQueue = [...queue];
+        indexes.forEach((index) => {
+            const origin = newQueue[index];
+            newQueue[index] = {
+                ...newItem,
+                [timeStampSymbol]: origin?.[timeStampSymbol] ?? Date.now(),
+                [sortIndexSymbol]: origin?.[sortIndexSymbol] ?? 0,
+            };
+        });
+        this.setMusicQueue(newQueue);
+        const targetIndex = indexes[0];
+        if (isCurrent) {
+            // setMusicQueue 会按 currentMusic 重算 currentIndex，换源后旧条目已不在队列里，会变成 -1
+            this.currentIndex = targetIndex;
+            this.setCurrentMusic(newQueue[targetIndex]);
+        }
+        if (play) {
+            await this.playIndex(targetIndex, {
+                // 换了音源，必须强制刷新，否则会走同曲短路分支只 seek 不换源
+                refreshSource: true,
+                seekTo: restartFromStart ? 0 : undefined,
+            });
+        }
+        return true;
+    }
+
     public async playMusicWithReplaceQueue(musicList: IMusic.IMusicItem[], musicItem?: IMusic.IMusicItem) {
         if (!musicList.length && !musicItem) {
             return;

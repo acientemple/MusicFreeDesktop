@@ -430,6 +430,102 @@ export async function removeMusicFromSheet(
     }
 }
 
+/**
+ * 用新条目替换歌单里的旧条目，保持原位置
+ */
+export async function replaceMusicInSheet(
+    oldItem: IMusic.IMusicItem,
+    newItem: IMusic.IMusicItem,
+    sheetId: string,
+) {
+    const targetSheet = musicSheets.find((item) => item.id === sheetId);
+    if (!targetSheet) {
+        return;
+    }
+    const targetMusicList = targetSheet.musicList ?? [];
+    const originRef = targetMusicList.find((mi) => isSameMedia(mi, oldItem));
+    if (!originRef) {
+        return;
+    }
+    try {
+        await musicSheetDB.transaction(
+            "rw",
+            musicSheetDB.sheets,
+            musicSheetDB.musicStore,
+            async () => {
+                // 新条目入库（引用计数 +1）
+                const [newDetail] = await musicSheetDB.musicStore.bulkGet([
+                    [newItem.platform, newItem.id],
+                ]);
+                if (newDetail) {
+                    newDetail[musicRefSymbol] =
+                        (newDetail[musicRefSymbol] ?? 0) + 1;
+                    await musicSheetDB.musicStore.bulkPut([newDetail]);
+                } else {
+                    await musicSheetDB.musicStore.bulkPut([
+                        {
+                            ...newItem,
+                            [musicRefSymbol]: 1,
+                        },
+                    ]);
+                }
+
+                // 旧条目出库（引用计数 -1，归零则删除）
+                const [oldDetail] = await musicSheetDB.musicStore.bulkGet([
+                    [oldItem.platform, oldItem.id],
+                ]);
+                if (oldDetail) {
+                    oldDetail[musicRefSymbol] =
+                        (oldDetail[musicRefSymbol] ?? 1) - 1;
+                    if (oldDetail[musicRefSymbol] <= 0) {
+                        await musicSheetDB.musicStore.bulkDelete([
+                            [oldItem.platform, oldItem.id],
+                        ]);
+                    } else {
+                        await musicSheetDB.musicStore.bulkPut([oldDetail]);
+                    }
+                }
+
+                // 引用条目原地替换
+                await musicSheetDB.sheets
+                    .where("id")
+                    .equals(sheetId)
+                    .modify((obj) => {
+                        const list = obj.musicList ?? [];
+                        const index = list.findIndex((mi) =>
+                            isSameMedia(mi, oldItem),
+                        );
+                        if (index === -1) {
+                            return;
+                        }
+                        list[index] = {
+                            platform: newItem.platform,
+                            id: newItem.id,
+                            [sortIndexSymbol]: originRef[sortIndexSymbol] ?? 0,
+                            [timeStampSymbol]:
+                                originRef[timeStampSymbol] ?? Date.now(),
+                        };
+                        obj.musicList = list;
+                        if (index === list.length - 1) {
+                            obj.artwork = newItem.artwork ?? obj.artwork;
+                        }
+                        targetSheet.artwork = obj.artwork;
+                        targetSheet.musicList = obj.musicList;
+                        musicSheets = [...musicSheets];
+                    });
+            },
+        );
+    } catch (e) {
+        console.log(e);
+        throw e;
+    }
+
+    if (sheetId === defaultSheet.id) {
+        favoriteMusicListIds.delete(getMediaPrimaryKey(oldItem));
+        favoriteMusicListIds.add(getMediaPrimaryKey(newItem));
+    }
+}
+
 /** 获取歌单内的歌曲详细信息 */
 export async function getSheetItemDetail(
     sheetId: string,

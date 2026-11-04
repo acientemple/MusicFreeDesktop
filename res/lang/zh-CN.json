@@ -251,6 +251,8 @@
     "music_alternatives_unsupported": "没有插件支持查找完整版本",
     "music_alternatives_full_tag": "整轨",
     "music_alternatives_origin_tag": "原唱",
+    "music_alternatives_replaced": "已替换为完整版",
+    "music_alternatives_replace_fail": "替换失败：{{reason}}",
     "new_version_found": "发现新版本",
     "latest_version": "最新版本: ",
     "current_version": "当前版本: ",

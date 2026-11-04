@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import Base from "../Base";
 import "./index.scss";
 import Loading from "@/renderer/components/Loading";
@@ -8,11 +9,14 @@ import albumImg from "@/assets/imgs/album-cover.jpg";
 import { setFallbackAlbum } from "@/renderer/utils/img-on-error";
 import PluginManager, { useSupportedPlugin } from "@shared/plugin-manager/renderer";
 import trackPlayer from "@renderer/core/track-player";
+import MusicSheet from "@/renderer/core/music-sheet";
 import { hideModal } from "../..";
 import { getMediaPrimaryKey } from "@/common/media-util";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
+    /** 本地歌单 id / "play-list"（播放队列）/ undefined（无归属） */
+    sheetType?: string;
 }
 
 function formatDuration(duration?: number | null) {
@@ -25,8 +29,38 @@ function formatDuration(duration?: number | null) {
 }
 
 export default function MusicAlternatives(props: IProps) {
-    const { musicItem } = props;
+    const { musicItem, sheetType } = props;
     const { t } = useTranslation();
+
+    /**
+     * 用完整版覆盖原来的不完整版本：所在本地歌单与播放队列都替换，
+     * 正在播放的那一首从头开始播。
+     */
+    async function applyFullVersion(
+        original: IMusic.IMusicItem,
+        alternative: IMusic.IMusicItem,
+    ) {
+        try {
+            if (sheetType && sheetType !== "play-list") {
+                await MusicSheet.frontend.replaceMusicInSheet(
+                    original,
+                    alternative,
+                    sheetType,
+                );
+            }
+            await trackPlayer.replaceMusic(original, alternative, {
+                play: true,
+                restartFromStart: true,
+            });
+            toast.success(t("modal.music_alternatives_replaced"));
+        } catch (e) {
+            toast.error(
+                t("modal.music_alternatives_replace_fail", {
+                    reason: e?.message ?? "",
+                }),
+            );
+        }
+    }
 
     const [loading, setLoading] = useState(true);
     const [items, setItems] = useState<IMusic.IMusicItem[]>([]);
@@ -114,8 +148,10 @@ export default function MusicAlternatives(props: IProps) {
                                     key={getMediaPrimaryKey(item)}
                                     role="button"
                                     onClick={() => {
-                                        trackPlayer.playMusic(item);
                                         hideModal();
+                                        if (musicItem) {
+                                            applyFullVersion(musicItem, item);
+                                        }
                                     }}
                                 >
                                     <img

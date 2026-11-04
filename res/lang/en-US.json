@@ -272,6 +272,8 @@
     "music_alternatives_unsupported": "No plugin supports finding full versions",
     "music_alternatives_full_tag": "Full",
     "music_alternatives_origin_tag": "Original Artist",
+    "music_alternatives_replaced": "Replaced with the full version",
+    "music_alternatives_replace_fail": "Replace failed: {{reason}}",
     "new_version_found": "New Version Found",
     "latest_version": "Latest Version: ",
     "current_version": "Current Version: ",

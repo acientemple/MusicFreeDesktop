@@ -195,6 +195,24 @@ export async function removeMusicFromFavorite(
     return removeMusicFromSheet(musicItems, defaultSheet.id);
 }
 
+/**
+ * 用新条目替换歌单里的旧条目，保持原位置
+ */
+export async function replaceMusicInSheet(
+    oldItem: IMusic.IMusicItem,
+    newItem: IMusic.IMusicItem,
+    sheetId: string,
+) {
+    await backend.replaceMusicInSheet(oldItem, newItem, sheetId);
+
+    musicSheetsStore.setValue(backend.getAllSheets());
+    if (sheetId === defaultSheet.id) {
+        // 更新默认列表的状态
+        refreshFavoriteState();
+    }
+    refetchSheetDetail(sheetId);
+}
+
 /** 是否是我喜欢的歌单 */
 export function isFavoriteMusic(musicItem: IMusic.IMusicItem) {
     return backend.isFavoriteMusic(musicItem);

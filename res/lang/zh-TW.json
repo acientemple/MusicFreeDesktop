@@ -272,6 +272,8 @@
     "music_alternatives_unsupported": "沒有外掛支援尋找完整版本",
     "music_alternatives_full_tag": "整軌",
     "music_alternatives_origin_tag": "原唱",
+    "music_alternatives_replaced": "已替換為完整版",
+    "music_alternatives_replace_fail": "替換失敗：{{reason}}",
     "new_version_found": "發現新版本",
     "latest_version": "最新版本：",
     "current_version": "當前版本：",
