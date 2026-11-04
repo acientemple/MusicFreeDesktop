@@ -93,6 +93,29 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         }
     }
 
+    /** 获取视频源（MV 画面） */
+    async getVideoSource(
+        musicItem: IMedia.IMediaBase,
+        quality: IMusic.IQualityKey = "standard",
+    ): Promise<IPlugin.IMediaSourceResult | null> {
+        if (!this.plugin.instance.getVideoSource) {
+            return null;
+        }
+        try {
+            const result = await this.plugin.instance.getVideoSource(
+                resetMediaItem(musicItem, undefined, true),
+                quality,
+            );
+            if (!result?.url) {
+                return null;
+            }
+            return result;
+        } catch (e: any) {
+            console.log(e);
+            return null;
+        }
+    }
+
     /** 获取音乐详情 */
     async getMusicInfo(
         musicItem: IMedia.IMediaBase,
@@ -364,8 +387,7 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         } catch (e: any) {
             console.log(e);
             // devLog('error', '导入歌单失败', e, e?.message);
-
-            return [];
+            throw e instanceof Error ? e : new Error(String(e?.message ?? e));
         }
     }
     /** 导入单曲 */
@@ -373,14 +395,14 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         try {
             const result = await this.plugin.instance?.importMusicItem?.(urlLike);
             if (!result) {
-                throw new Error();
+                throw new Error("插件未能解析该链接对应的单曲");
             }
             resetMediaItem(result, this.plugin.name);
             return result;
         } catch (e: any) {
+            console.log(e);
             // devLog('error', '导入单曲失败', e, e?.message);
-
-            return null;
+            throw e instanceof Error ? e : new Error(String(e?.message ?? e));
         }
     }
     /** 获取榜单 */
@@ -483,6 +505,33 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
             }
             return result;
         } catch (e: any) {
+            return {
+                isEnd: true,
+                data: [],
+            };
+        }
+    }
+
+    /** 查找同一首歌的其他可完整播放版本 */
+    async getMusicAlternatives(
+        musicItem: IMusic.IMusicItem,
+        page = 1,
+    ): Promise<IPlugin.IGetAlternativesResult> {
+        try {
+            const result = await this.plugin.instance?.getMusicAlternatives?.(
+                resetMediaItem(musicItem, undefined, true),
+                page,
+            );
+            if (!result || !Array.isArray(result.data)) {
+                throw new Error();
+            }
+            result.data.forEach((item) => resetMediaItem(item, this.plugin.name));
+            return {
+                isEnd: result.isEnd ?? true,
+                data: result.data,
+            };
+        } catch (e: any) {
+            console.log(e);
             return {
                 isEnd: true,
                 data: [],

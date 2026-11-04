@@ -17,6 +17,7 @@ import DragReceiver, { startDrag } from "@/renderer/components/DragReceiver";
 import { produce } from "immer";
 import { i18n } from "@/shared/i18n/renderer";
 import PluginManager, { useSortedPlugins } from "@shared/plugin-manager/renderer";
+import { normalizeErrorMessage } from "@/common/normalize-util";
 
 const t = i18n.t;
 
@@ -93,7 +94,6 @@ function renderOptions(info: any) {
                                     plugin: row.platform,
                                 },
                             ),
-                            maxLength: 1000,
                             onOk(text) {
                                 return PluginManager.callPluginDelegateMethod(
                                     row,
@@ -107,8 +107,13 @@ function renderOptions(info: any) {
                                     musicItems: result as IMusic.IMusicItem[],
                                 });
                             },
-                            onPromiseRejected() {
-                                console.log(t("plugin_management_page.import_failed"));
+                            onPromiseRejected(reason) {
+                                const detail = normalizeErrorMessage(reason);
+                                toast.error(
+                                    detail
+                                        ? `${t("plugin_management_page.import_failed")}: ${detail}`
+                                        : t("plugin_management_page.import_failed"),
+                                );
                             },
                             hints: row.hints?.importMusicItem,
                         });
@@ -133,7 +138,6 @@ function renderOptions(info: any) {
                                     plugin: row.platform,
                                 },
                             ),
-                            maxLength: 1000,
                             onOk(text) {
                                 return PluginManager.callPluginDelegateMethod(
                                     row,
@@ -147,8 +151,13 @@ function renderOptions(info: any) {
                                     musicItems: result as IMusic.IMusicItem[],
                                 });
                             },
-                            onPromiseRejected() {
-                                toast.error(t("plugin_management_page.import_failed"));
+                            onPromiseRejected(reason) {
+                                const detail = normalizeErrorMessage(reason);
+                                toast.error(
+                                    detail
+                                        ? `${t("plugin_management_page.import_failed")}: ${detail}`
+                                        : t("plugin_management_page.import_failed"),
+                                );
                             },
                             hints: row.hints?.importMusicSheet,
                         });

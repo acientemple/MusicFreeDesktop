@@ -174,10 +174,12 @@ export default function Backup() {
                                     AppConfig.getConfig("backup.resumeBehavior") === "overwrite",
                                 );
 
-                                toast.success(t("backup.backup_success"));
+                                toast.success(
+                                    t("settings.backup.resume_success"),
+                                );
                             } catch (e) {
                                 toast.error(
-                                    t("backup.backup_fail", {
+                                    t("settings.backup.resume_fail", {
                                         reason: e?.message,
                                     }),
                                 );

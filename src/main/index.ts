@@ -1,4 +1,4 @@
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { app, BrowserWindow, globalShortcut, session } from "electron";
 import fs from "fs";
 import path from "path";
 import { setAutoFreeze } from "immer";
@@ -18,9 +18,18 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import PluginManager from "@shared/plugin-manager/main";
 import ServiceManager from "@shared/service-manager/main";
 import utils from "@shared/utils/main";
+import updater from "@main/updater";
 import messageBus from "@shared/message-bus/main";
 import shortCut from "@shared/short-cut/main";
 import voidCallback from "@/common/void-callback";
+
+// 开发调试：设 MUSICFREE_DEBUG_PORT=9223 可开启 CDP 远程调试端口
+if (process.env.MUSICFREE_DEBUG_PORT) {
+    app.commandLine.appendSwitch(
+        "remote-debugging-port",
+        process.env.MUSICFREE_DEBUG_PORT,
+    );
+}
 
 // portable
 if (process.platform === "win32") {
@@ -113,9 +122,11 @@ app.whenReady().then(async () => {
         },
     });
     utils.setup(windowManager);
+    updater.setup(windowManager);
     PluginManager.setup(windowManager);
     TrayManager.setup(windowManager);
     WindowDrag.setup();
+    setupMediaPermission();
     shortCut.setup().then(voidCallback);
     logger.logPerf("Create Main Window");
     // Setup message bus & app state
@@ -164,9 +175,20 @@ app.whenReady().then(async () => {
 
 });
 
+/**
+ * 声音识别歌词需要调用麦克风。这里显式接管权限请求并全部放行，
+ * 与 Electron 未设置处理器时的默认行为保持一致
+ */
+function setupMediaPermission() {
+    session.defaultSession.setPermissionRequestHandler(
+        (_webContents, _permission, callback) => {
+            callback(true);
+        },
+    );
+}
+
 async function bootstrap() {
     ServiceManager.setup(windowManager);
-
     const downloadPath = AppConfig.getConfig("download.path");
     if (!downloadPath) {
         AppConfig.setConfig({

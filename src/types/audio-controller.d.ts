@@ -9,6 +9,9 @@ export interface IAudioController {
 
     musicItem: IMusic.IMusicItem | null;
 
+    // 实际用于播放的地址
+    resolvedSourceUrl: string | null;
+
     // 准备音乐信息
     prepareTrack?(musicItem: IMusic.IMusicItem): void;
 

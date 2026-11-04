@@ -21,7 +21,8 @@ const config: ForgeConfig = {
       },
     ],
   },
-  rebuildConfig: {},
+  // 空数组 = 跳过所有原生模块重编译：better-sqlite3 / sharp 直接用预编译的 .node
+  rebuildConfig: { onlyModules: [] },
   makers: [
     // new MakerSquirrel({
     //   exe: "MusicFree",

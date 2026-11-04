@@ -54,7 +54,11 @@ export default function SimpleInputWithState<PromiseItem>(
                             autoFocus
                             placeholder={placeholder}
                             onChange={(e) => {
-                                setInputText(e.target.value.slice(0, maxLength));
+                                setInputText(
+                                    maxLength
+                                        ? e.target.value.slice(0, maxLength)
+                                        : e.target.value,
+                                );
                             }}
                             value={inputText}
                         ></input>

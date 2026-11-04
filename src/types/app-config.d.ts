@@ -3,6 +3,8 @@ interface _IAppConfig {
     "normal.closeBehavior": "exit_app" | "minimize";
     "normal.maxHistoryLength": number;
     "normal.checkUpdate": boolean;
+    /** 是否把预发布版本也算作可更新版本 */
+    "normal.checkPrerelease": boolean;
     "normal.autoLoadMore": boolean;
     "normal.taskbarThumb": "window" | "artwork";
     "normal.musicListColumnsShown": Array<"duration" | "platform">;
@@ -39,6 +41,13 @@ interface _IAppConfig {
     "lyric.fontSize": number;
     /** 描边颜色 */
     "lyric.strokeColor": string;
+
+    /** 歌词缺失时是否自动智能匹配 */
+    "lyric.smartSearch.enabled": boolean;
+    /** 智能匹配自动应用的得分阈值 */
+    "lyric.smartSearch.autoApplyThreshold": number;
+    /** 声音识别服务（audd.io）的 token */
+    "lyric.recognition.token": string;
 
     /** 是否启用本地快捷键 */
     "shortCut.enableLocal": boolean;

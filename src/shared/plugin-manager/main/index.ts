@@ -1,6 +1,7 @@
 import { app, ipcMain } from "electron";
 import fs from "fs/promises";
 import path from "path";
+import * as chokidar from "chokidar";
 import { Plugin } from "./plugin";
 import { rimraf } from "rimraf";
 import _axios from "axios";
@@ -35,6 +36,10 @@ class PluginManager {
     private clonedPlugins: IPlugin.IPluginDelegate[] = [];
 
     private inited = false;
+
+    private pluginWatcher: chokidar.FSWatcher | null = null;
+
+    private reloadTimer: NodeJS.Timeout | null = null;
 
     private _plugins: Plugin[] = [];
     public get plugins() {
@@ -130,6 +135,42 @@ class PluginManager {
         // 3. load all plugins
         await this.loadAllPlugins();
         this.inited = true;
+
+        // 4. 开发模式下监听插件目录，改完插件不用重启应用
+        this.setupPluginWatcher();
+    }
+
+    private setupPluginWatcher() {
+        if (app.isPackaged) {
+            return;
+        }
+        this.pluginWatcher = chokidar.watch(this.pluginBasePath, {
+            depth: 0,
+            persistent: true,
+            ignoreInitial: true,
+            ignorePermissionErrors: true,
+            awaitWriteFinish: {
+                stabilityThreshold: 200,
+                pollInterval: 50,
+            },
+        });
+        const onPluginFileChanged = () => this.scheduleReload();
+        this.pluginWatcher.on("add", onPluginFileChanged);
+        this.pluginWatcher.on("change", onPluginFileChanged);
+        this.pluginWatcher.on("unlink", onPluginFileChanged);
+        logger.logInfo("插件热重载已开启", { path: this.pluginBasePath });
+    }
+
+    private scheduleReload() {
+        if (this.reloadTimer) {
+            clearTimeout(this.reloadTimer);
+        }
+        this.reloadTimer = setTimeout(() => {
+            this.reloadTimer = null;
+            this.loadAllPlugins().catch((e) => {
+                logger.logError("插件热重载失败", e);
+            });
+        }, 300);
     }
 
     // 调用某个插件的方法
@@ -144,7 +185,10 @@ class PluginManager {
         if (hash === localPluginHash || platform === localPluginName) {
             plugin = localPlugin;
         } else if (hash) {
-            plugin = this.plugins.find((item) => item.hash === hash);
+            plugin =
+                this.plugins.find((item) => item.hash === hash) ??
+                // hash 失效时兜底按平台名找，避免旧引用直接失效
+                this.plugins.find((item) => item.name === platform);
         } else if (platform) {
             plugin = this.plugins.find((item) => item.name === platform);
         }
@@ -216,6 +260,7 @@ class PluginManager {
 
     // 加载所有插件
     public async loadAllPlugins() {
+        const oldPluginMap = new Map(this.plugins.map((p) => [p.path, p]));
         const rawPluginNames = await fs.readdir(this.pluginBasePath);
         const pluginHashSet = new Set<string>();
         const plugins: Plugin[] = [];
@@ -226,13 +271,23 @@ class PluginManager {
                 if (fileStat.isFile() && path.extname(pluginPath) === ".js") {
                     const funcCode = await fs.readFile(pluginPath, "utf-8");
                     const plugin = new Plugin(funcCode, pluginPath);
+                    const oldPlugin = oldPluginMap.get(pluginPath);
+                    if (plugin.hash === "") {
+                        // 解析失败时保留上一个可用实例，改到一半也不会让插件整个消失
+                        if (oldPlugin) {
+                            plugins.push(oldPlugin);
+                        }
+                        continue;
+                    }
+                    if (oldPlugin && oldPlugin.name === plugin.name) {
+                        // 同一个文件沿用旧 hash，页面上的旧引用才不会失效
+                        plugin.hash = oldPlugin.hash;
+                    }
                     if (pluginHashSet.has(plugin.hash)) {
                         continue;
                     }
-                    if (plugin.hash !== "") {
-                        pluginHashSet.add(plugin.hash);
-                        plugins.push(plugin);
-                    }
+                    pluginHashSet.add(plugin.hash);
+                    plugins.push(plugin);
                 }
             } catch (e) {
                 logger.logError("插件加载失败", e);

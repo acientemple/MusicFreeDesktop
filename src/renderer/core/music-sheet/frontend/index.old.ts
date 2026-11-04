@@ -369,3 +369,7 @@ export function useMusicSheet(sheetId: string) {
 export async function exportAllSheetDetails() {
     return await backend.exportAllSheetDetails();
 }
+
+export async function getSheetItemDetail(sheetId: string) {
+    return await backend.getSheetItemDetail(sheetId);
+}

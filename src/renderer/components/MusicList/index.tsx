@@ -185,6 +185,16 @@ export function showMusicContextMenu(
             },
         },
         {
+            title: i18n.t("music_list_context_menu.search_full_version"),
+            icon: "magnifying-glass",
+            show: !isArray,
+            onClick() {
+                showModal("MusicAlternatives", {
+                    musicItem: musicItems as IMusic.IMusicItem,
+                });
+            },
+        },
+        {
             title: i18n.t("music_list_context_menu.add_to_my_sheets"),
             icon: "document-plus",
             onClick() {

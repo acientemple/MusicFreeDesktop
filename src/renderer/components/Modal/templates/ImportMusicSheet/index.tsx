@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import "./index.scss";
 import NoPlugin from "@renderer/components/NoPlugin";
 import PluginManager from "@shared/plugin-manager/renderer";
+import { normalizeErrorMessage } from "@/common/normalize-util";
 
 interface IProps {
     plugins: IPlugin.IPluginDelegate[];
@@ -38,7 +39,6 @@ export default function ImportMusicSheet(props: IProps) {
                                                 plugin: it.platform,
                                             },
                                         ),
-                                        maxLength: 1000,
                                         onOk(text) {
                                             return PluginManager.callPluginDelegateMethod(
                                                 it,
@@ -52,8 +52,13 @@ export default function ImportMusicSheet(props: IProps) {
                                                 musicItems: result as IMusic.IMusicItem[],
                                             });
                                         },
-                                        onPromiseRejected() {
-                                            toast.error(t("plugin_management_page.import_failed"));
+                                        onPromiseRejected(reason) {
+                                            const detail = normalizeErrorMessage(reason);
+                                            toast.error(
+                                                detail
+                                                    ? `${t("plugin_management_page.import_failed")}: ${detail}`
+                                                    : t("plugin_management_page.import_failed"),
+                                            );
                                         },
                                         hints: it.hints?.importMusicSheet,
                                     });

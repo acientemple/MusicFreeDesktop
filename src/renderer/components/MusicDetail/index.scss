@@ -85,7 +85,6 @@
     & .music-album-options {
       $size: 35vmin;
       width: $size;
-      height: $size;
       object-fit: cover;
       -webkit-user-drag: none;
       & .music-album {
@@ -97,10 +96,32 @@
 
       & .music-options {
         margin-top: 18px;
-        height: 64px;
         width: 100%;
         display: flex;
         gap: 12px;
+        justify-content: center;
+
+        & .music-option-button {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 999px;
+          border: 1px solid var(--dividerColor);
+          font-size: 1.2rem;
+          cursor: pointer;
+          transition: all 0.2s;
+
+          & svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          &:hover {
+            border-color: var(--primaryColor);
+            color: var(--primaryColor);
+          }
+        }
       }
     }
   }

@@ -14,8 +14,37 @@ declare namespace ICommon {
       version: string;
       changeLog: string[];
       download: string[];
+      /** 是否是预发布版本 */
+      prerelease?: boolean;
+      /** Release 页面地址 */
+      releasePage?: string;
+      /** 当前平台对应的资产文件名 */
+      assetName?: string;
+      /** 资产大小（字节） */
+      assetSize?: number;
+      /** 当前环境是否支持一键安装 */
+      installable?: boolean;
     };
   }
+
+  interface IUpdaterProgress {
+    /** 0 ~ 1 */
+    percent: number;
+    /** 已下载字节数 */
+    downloaded: number;
+    /** 总字节数，未知时为 0 */
+    total: number;
+    /** 字节/秒 */
+    speed: number;
+  }
+
+  type IUpdaterStatus =
+    | "idle"
+    | "downloading"
+    | "ready"
+    | "installing"
+    | "error"
+    | "done";
 
   interface IPoint {
     x: number;

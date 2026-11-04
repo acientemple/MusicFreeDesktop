@@ -11,6 +11,7 @@ import { app } from "electron";
 import * as webdav from "webdav";
 import AppConfig from "@shared/app-config/main";
 import pluginStorage from "@shared/plugin-manager/main/polyfill/storage";
+import logger from "@shared/logger/main";
 
 axios.defaults.timeout = 15000;
 
@@ -143,6 +144,7 @@ export class Plugin {
             }
             this.checkValid(_instance);
         } catch (e: any) {
+            logger.logError("插件解析失败", e, { path: pluginPath });
             this.stateCode = PluginStateCode.CannotParse;
             if (e?.stateCode) {
                 this.stateCode = e.stateCode;

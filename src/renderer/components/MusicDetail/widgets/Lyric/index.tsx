@@ -15,7 +15,7 @@ import LyricParser from "@/renderer/utils/lyric-parser";
 import { getLinkedLyric, unlinkLyric } from "@/renderer/core/link-lyric";
 import { getMediaPrimaryKey } from "@/common/media-util";
 import { useTranslation } from "react-i18next";
-import { useLyric } from "@renderer/core/track-player/hooks";
+import { useCurrentMusic, useLyric } from "@renderer/core/track-player/hooks";
 import trackPlayer from "@renderer/core/track-player";
 import { dialogUtil, fsUtil } from "@shared/utils/renderer";
 
@@ -87,7 +87,7 @@ export default function Lyric() {
                         x: e.clientX,
                         y: e.clientY,
                         width: 200,
-                        height: 146,
+                        height: 300,
                         component: (
                             <LyricContextMenu
                                 setLyricFontSize={setFontSize}
@@ -127,6 +127,28 @@ export default function Lyric() {
                                         }}
                                     >
                                         {t("music_detail.search_lyric")}
+                                    </div>
+                                    <div
+                                        className="lyric-item search-lyric"
+                                        role="button"
+                                        onClick={() => {
+                                            showModal("SmartLyric", {
+                                                musicItem: trackPlayer.currentMusic,
+                                            });
+                                        }}
+                                    >
+                                        {t("music_detail.smart_lyric")}
+                                    </div>
+                                    <div
+                                        className="lyric-item search-lyric"
+                                        role="button"
+                                        onClick={() => {
+                                            showModal("AudioRecognition", {
+                                                musicItem: trackPlayer.currentMusic,
+                                            });
+                                        }}
+                                    >
+                                        {t("music_detail.audio_recognition")}
                                     </div>
                                 </>
                             }
@@ -182,19 +204,24 @@ function LyricContextMenu(props: ILyricContextMenuProps) {
 
     const { t } = useTranslation();
 
-    const currentMusicRef = useRef<IMusic.IMusicItem>(
-        trackPlayer.currentMusic ?? ({} as any),
-    );
+    // 右键菜单关闭后组件仍然挂载，歌曲换了也得跟着换
+    const currentMusic = useCurrentMusic();
 
     useEffect(() => {
-        if (currentMusicRef.current?.platform) {
-            getLinkedLyric(currentMusicRef.current).then((linked) => {
-                if (linked) {
-                    setLinkedLyricInfo(linked);
-                }
-            });
+        if (!currentMusic?.platform) {
+            setLinkedLyricInfo(null);
+            return;
         }
-    }, []);
+        let canceled = false;
+        getLinkedLyric(currentMusic).then((linked) => {
+            if (!canceled) {
+                setLinkedLyricInfo(linked ?? null);
+            }
+        });
+        return () => {
+            canceled = true;
+        };
+    }, [currentMusic]);
 
     function handleFontSize(val: string | number) {
         if (val) {
@@ -220,7 +247,7 @@ function LyricContextMenu(props: ILyricContextMenuProps) {
             const result = await dialogUtil.showSaveDialog({
                 title: t("music_detail.lyric_ctx_download_lyric"),
                 defaultPath:
-          currentMusicRef.current.title +
+          (currentMusic?.title ?? "") +
           (fileType === "lrc" ? ".lrc" : ".txt"),
                 filters: [
                     {
@@ -340,8 +367,8 @@ function LyricContextMenu(props: ILyricContextMenuProps) {
                 role="button"
                 onClick={() => {
                     showModal("SearchLyric", {
-                        defaultTitle: currentMusicRef.current.title,
-                        musicItem: currentMusicRef.current,
+                        defaultTitle: currentMusic?.title,
+                        musicItem: currentMusic,
                     });
                 }}
             >
@@ -356,11 +383,33 @@ function LyricContextMenu(props: ILyricContextMenuProps) {
             <div
                 className="lyric-ctx-menu--row-container"
                 role="button"
+                onClick={() => {
+                    showModal("SmartLyric", {
+                        musicItem: currentMusic,
+                    });
+                }}
+            >
+                {t("music_detail.smart_lyric")}
+            </div>
+            <div
+                className="lyric-ctx-menu--row-container"
+                role="button"
+                onClick={() => {
+                    showModal("AudioRecognition", {
+                        musicItem: currentMusic,
+                    });
+                }}
+            >
+                {t("music_detail.audio_recognition")}
+            </div>
+            <div
+                className="lyric-ctx-menu--row-container"
+                role="button"
                 data-disabled={!linkedLyricInfo}
                 onClick={async () => {
                     try {
-                        await unlinkLyric(currentMusicRef.current);
-                        if (trackPlayer.isCurrentMusic(currentMusicRef.current)) {
+                        await unlinkLyric(currentMusic);
+                        if (trackPlayer.isCurrentMusic(currentMusic)) {
                             trackPlayer.fetchCurrentLyric(true);
                         }
                         toast.success(t("music_detail.toast_media_lyric_unlinked"));

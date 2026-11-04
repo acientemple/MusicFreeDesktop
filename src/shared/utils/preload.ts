@@ -152,12 +152,67 @@ const dialog = {
 };
 
 
+/****** updater utils ******/
+async function downloadUpdate(assetUrl: string, assetName: string) {
+    return await ipcRenderer.invoke("@shared/updater/download", {
+        assetUrl,
+        assetName,
+    });
+}
+
+async function cancelUpdateDownload() {
+    return await ipcRenderer.invoke("@shared/updater/cancel-download");
+}
+
+async function installUpdate(version: string) {
+    return await ipcRenderer.invoke("@shared/updater/install", { version });
+}
+
+async function getLastUpdateResult() {
+    return await ipcRenderer.invoke("@shared/updater/last-result");
+}
+
+function onUpdateProgress(
+    callback: (progress: ICommon.IUpdaterProgress) => void,
+) {
+    const listener = (
+        _e: Electron.IpcRendererEvent,
+        progress: ICommon.IUpdaterProgress,
+    ) => callback(progress);
+    ipcRenderer.on("@shared/updater/progress", listener);
+    return () => {
+        ipcRenderer.removeListener("@shared/updater/progress", listener);
+    };
+}
+
+function onUpdateStatus(callback: (status: ICommon.IUpdaterStatus) => void) {
+    const listener = (
+        _e: Electron.IpcRendererEvent,
+        status: ICommon.IUpdaterStatus,
+    ) => callback(status);
+    ipcRenderer.on("@shared/updater/status", listener);
+    return () => {
+        ipcRenderer.removeListener("@shared/updater/status", listener);
+    };
+}
+
+const updater = {
+    download: downloadUpdate,
+    cancelDownload: cancelUpdateDownload,
+    install: installUpdate,
+    getLastResult: getLastUpdateResult,
+    onProgress: onUpdateProgress,
+    onStatus: onUpdateStatus,
+};
+
+
 const mod = {
     fs: fsUtil,
     app,
     appWindow,
     shell,
     dialog,
+    updater,
 };
 
 contextBridge.exposeInMainWorld("@shared/utils", mod);

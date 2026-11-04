@@ -26,7 +26,17 @@ import logger from "@shared/logger/renderer";
 import voidCallback from "@/common/void-callback";
 import { delay } from "@/common/time-util";
 import { createUniqueMap } from "@/common/unique-map";
-import { getLinkedLyric } from "@renderer/core/link-lyric";
+import { getLinkedLyric, getLinkedLyricText } from "@renderer/core/link-lyric";
+import {
+    applyLyricCandidate,
+    hasSearched,
+    markSearched,
+    pickLyricCandidate,
+    recordCandidates,
+    searchLyricCandidates,
+    unmarkSearched,
+} from "@renderer/core/smart-lyric";
+import { isEmptyLyricSource } from "@/common/lyric-util";
 import { fsUtil } from "@shared/utils/renderer";
 import PluginManager from "@shared/plugin-manager/renderer";
 
@@ -130,6 +140,9 @@ class TrackPlayer {
     private currentIndex = -1;
 
     private audioController: IAudioController;
+
+    /** 最近一次使用的音源 */
+    private lastMediaSource: IPlugin.IMediaSourceResult | null = null;
 
     private ee: EventEmitter<InternalPlayerEvents>;
 
@@ -622,33 +635,40 @@ class TrackPlayer {
             return;
         }
         try {
+            // 直接关联的歌词文本（声音识别等场景）
+            const linkedText = await getLinkedLyricText(currentMusic);
+            if (linkedText?.rawLrc) {
+                if (!this.isCurrentMusic(currentMusic)) {
+                    return;
+                }
+                this.applyLyricText(currentMusic, linkedText.rawLrc, linkedText.translation);
+                return;
+            }
+
             // 获取被关联的歌词
             const linkedLyricItem = await getLinkedLyric(currentMusic);
-            let lyricSource: ILyric.ILyricSource;
+            let lyricSource: ILyric.ILyricSource | null = null;
 
             if (linkedLyricItem) {
-                lyricSource = await PluginManager.callPluginDelegateMethod(
-                    linkedLyricItem,
-                    "getLyric",
-                    linkedLyricItem,
-                );
+                lyricSource = await this.safeGetLyric(linkedLyricItem);
             }
             if (!lyricSource && this.isCurrentMusic(currentMusic)) {
-                lyricSource = await PluginManager.callPluginDelegateMethod(
-                    currentMusic,
-                    "getLyric",
-                    currentMusic,
-                );
+                lyricSource = await this.safeGetLyric(currentMusic);
             }
 
             if (!this.isCurrentMusic(currentMusic)) {
                 return;
             }
 
-            if (!lyricSource?.rawLrc && !lyricSource?.translation) {
+            if (isEmptyLyricSource(lyricSource?.rawLrc, lyricSource?.translation)) {
+                // 没有歌词，尝试用标题/歌手智能匹配
                 this.setCurrentLyric({});
+                void this.trySmartLyric(currentMusic);
+                return;
             }
-            const parser = new LyricParser(lyricSource.rawLrc, {
+
+            const rawLrc = lyricSource.rawLrc || lyricSource.translation;
+            const parser = new LyricParser(rawLrc, {
                 musicItem: currentMusic,
                 translation: lyricSource.translation,
             });
@@ -663,6 +683,83 @@ class TrackPlayer {
         }
 
 
+    }
+
+    /**
+     * 取歌词。插件报错时按没有歌词处理，
+     * 否则异常会中断后面的智能匹配
+     */
+    private async safeGetLyric(
+        musicItem: IMusic.IMusicItem,
+    ): Promise<ILyric.ILyricSource | null> {
+        try {
+            return await PluginManager.callPluginDelegateMethod(
+                musicItem,
+                "getLyric",
+                musicItem,
+            );
+        } catch (e) {
+            logger.logError("获取歌词失败", e);
+            return null;
+        }
+    }
+
+    /** 直接用一段歌词文本刷新当前歌词 */
+    public applyLyricText(
+        musicItem: IMusic.IMusicItem,
+        rawLrc: string,
+        translation?: string,
+    ) {
+        if (!this.isCurrentMusic(musicItem)) {
+            return;
+        }
+        const parser = new LyricParser(rawLrc, {
+            musicItem,
+            translation,
+        });
+        this.setCurrentLyric({
+            parser,
+            currentLrc: parser.getPosition(this.progress.currentTime || 0),
+        });
+    }
+
+    /**
+     * 歌词缺失时，用清洗后的标题去各个插件里搜索候选。
+     * 得分足够高时直接关联，否则把候选留给界面展示。
+     */
+    private async trySmartLyric(musicItem: IMusic.IMusicItem) {
+        if (!AppConfig.getConfig("lyric.smartSearch.enabled")) {
+            return;
+        }
+        if (hasSearched(musicItem)) {
+            return;
+        }
+        markSearched(musicItem);
+        try {
+            const threshold =
+                AppConfig.getConfig("lyric.smartSearch.autoApplyThreshold") ?? 0.8;
+            const candidates = await searchLyricCandidates(musicItem, {
+                stopWhenScore: threshold,
+            });
+            recordCandidates(musicItem, candidates);
+            if (!candidates.length) {
+                // 接口被风控时可能什么都没搜到，下次播放再试一次
+                unmarkSearched(musicItem);
+                return;
+            }
+            // 得分最高的候选未必真的有歌词，顺位往下找
+            const usable = await pickLyricCandidate(candidates, threshold);
+            if (!usable) {
+                return;
+            }
+            await applyLyricCandidate(musicItem, usable);
+            if (!this.isCurrentMusic(musicItem)) {
+                return;
+            }
+            await this.fetchCurrentLyric(true);
+        } catch (e) {
+            logger.logError("智能匹配歌词失败", e);
+        }
     }
 
 
@@ -785,6 +882,7 @@ class TrackPlayer {
         autoPlay: true,
     }) {
         this.resetProgress();
+        this.lastMediaSource = mediaSource;
         this.audioController.setTrackSource(mediaSource, musicItem);
 
         if (options.seekTo >= 0) {
@@ -794,6 +892,16 @@ class TrackPlayer {
         if (options.autoPlay) {
             this.audioController.play();
         }
+    }
+
+    /** 当前播放使用的音源，用于声音识别 */
+    public get currentMediaSource() {
+        return this.lastMediaSource;
+    }
+
+    /** 当前实际播放的地址，用于声音识别 */
+    public get currentSourceUrl() {
+        return this.audioController.resolvedSourceUrl;
     }
 
 

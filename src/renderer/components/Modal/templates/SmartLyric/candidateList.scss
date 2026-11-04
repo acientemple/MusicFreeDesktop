@@ -1,0 +1,98 @@
+.smart-lyric-candidate-list {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  & .candidate-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--listHoverColor);
+    }
+
+    & .artwork {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      object-fit: cover;
+    }
+
+    & .info {
+      flex: 1;
+      min-width: 0;
+
+      & .title {
+        font-size: 1.3rem;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      & .artist {
+        font-size: 1.1rem;
+        color: var(--textColor);
+        opacity: 0.7;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      & .meta {
+        display: flex;
+        gap: 8px;
+        font-size: 1rem;
+        color: var(--textColor);
+        opacity: 0.5;
+        overflow: hidden;
+        white-space: nowrap;
+
+        & .lyric-tag {
+          padding: 0 6px;
+          border-radius: 6px;
+          opacity: 1;
+
+          &[data-has-lyric="true"] {
+            color: var(--primaryColor);
+          }
+
+          &[data-has-lyric="false"] {
+            color: var(--textColor);
+            opacity: 0.4;
+          }
+        }
+      }
+    }
+
+    & .score {
+      flex-shrink: 0;
+      min-width: 44px;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 2px 8px;
+
+      &[data-level="high"] {
+        color: var(--primaryColor);
+      }
+
+      &[data-level="mid"] {
+        color: var(--textColor);
+        opacity: 0.7;
+      }
+
+      &[data-level="low"] {
+        color: var(--textColor);
+        opacity: 0.4;
+      }
+    }
+  }
+}

@@ -34,6 +34,9 @@ class AudioController extends ControllerBase implements IAudioController {
 
     public musicItem: IMusic.IMusicItem | null = null;
 
+    /** 实际用于播放的地址，供声音识别复用 */
+    public resolvedSourceUrl: string | null = null;
+
     get hasSource() {
         return !!this.audio.src;
     }
@@ -244,6 +247,9 @@ class AudioController extends ControllerBase implements IAudioController {
             this.onError(ErrorReason.EmptyResource, new Error("url is empty"));
             return;
         }
+
+        // 记录实际使用的地址，供声音识别直接抓取音频
+        this.resolvedSourceUrl = url;
 
         // 3. set real source
         if (getUrlExt(trackSource.url) === ".m3u8") {

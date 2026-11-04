@@ -93,3 +93,12 @@ export function normalizeFileSize(bytes: number) {
     }
     return `${bytes.toFixed(1)}${fileSizeUnits[ptr]}`;
 }
+
+/** 提取调用失败的可读原因：Electron 会给 IPC 异常套上 "Error invoking remote method '...': " 外壳 */
+export function normalizeErrorMessage(error: unknown): string {
+    const raw = error instanceof Error ? error.message : String(error ?? "");
+    return raw
+        .replace(/^Error invoking remote method '[^']*':\s*/, "")
+        .replace(/^Error:\s*/, "")
+        .trim();
+}

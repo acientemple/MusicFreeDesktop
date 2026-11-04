@@ -22,6 +22,10 @@ export default function Normal() {
                 keyPath="normal.checkUpdate"
             ></CheckBoxSettingItem>
             <CheckBoxSettingItem
+                label={t("settings.normal.check_prerelease")}
+                keyPath="normal.checkPrerelease"
+            ></CheckBoxSettingItem>
+            <CheckBoxSettingItem
                 label={t("settings.normal.auto_load_more")}
                 keyPath="normal.autoLoadMore"
             ></CheckBoxSettingItem>

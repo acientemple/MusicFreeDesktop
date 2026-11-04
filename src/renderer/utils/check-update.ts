@@ -8,12 +8,21 @@ export default async function checkUpdate(forceCheck?: boolean) {
     const updateInfo = await appUtil.checkUpdate();
     if (updateInfo.update) {
         const skipVersion = getUserPreference("skipVersion");
-        if (
-            !forceCheck &&
-      skipVersion &&
-      compare(updateInfo.version, skipVersion, "<=")
-        ) {
-            return false;
+        if (!forceCheck && skipVersion) {
+            let skipped = false;
+            try {
+                // 比对的是新版本，不是当前版本
+                skipped = compare(
+                    updateInfo.update.version,
+                    skipVersion,
+                    "<=",
+                );
+            } catch {
+                skipped = false;
+            }
+            if (skipped) {
+                return false;
+            }
         }
         showModal("Update", {
             currentVersion: updateInfo.version,

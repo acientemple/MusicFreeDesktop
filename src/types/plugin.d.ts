@@ -7,6 +7,10 @@ declare namespace IPlugin {
     userAgent?: string;
     /** 音质 */
     quality?: IMusic.IQualityKey;
+    /** 画面宽度 */
+    width?: number;
+    /** 画面高度 */
+    height?: number;
   }
 
   export interface ISearchResult<T extends IMedia.SupportMediaType> {
@@ -66,6 +70,11 @@ declare namespace IPlugin {
     data?: IComment.IComment[];
   }
 
+  interface IGetAlternativesResult {
+    isEnd?: boolean;
+    data: IMusic.IMusicItem[];
+  }
+
   interface IPluginDefine {
     /** 来源名 */
     platform: string;
@@ -100,6 +109,11 @@ declare namespace IPlugin {
     getMusicInfo?: (
       musicBase: IMedia.IMediaBase
     ) => Promise<Partial<IMusic.IMusicItem> | null>;
+    /** 获取视频源（MV 画面），可选实现 */
+    getVideoSource?: (
+      musicItem: IMusic.IMusicItemPartial,
+      quality: IMusic.IQualityKey
+    ) => Promise<IMediaSourceResult | null>;
     /** 获取歌词 */
     getLyric?: (
       musicItem: IMusic.IMusicItemPartial
@@ -137,6 +151,11 @@ declare namespace IPlugin {
     ) => Promise<ICommon.PaginationResponse<IMusic.IMusicSheetItem>>;
     /** 歌曲评论 */
     getMusicComments?: (musicItem: IMusic.IMusicItem, page?: number) => Promise<IGetCommentResult>
+    /** 查找同一首歌的其他可完整播放版本 */
+    getMusicAlternatives?: (
+      musicItem: IMusic.IMusicItemPartial,
+      page?: number
+    ) => Promise<IGetAlternativesResult | null>;
   }
 
   export interface IPluginInstance extends IPluginDefine {

@@ -36,6 +36,14 @@ interface IMod {
         showOpenDialog(options: Electron.OpenDialogOptions): Promise<Electron.OpenDialogReturnValue>;
         showSaveDialog(options: Electron.SaveDialogOptions): Promise<Electron.SaveDialogReturnValue>;
     }
+    updater: {
+        download: (assetUrl: string, assetName: string) => Promise<{ filePath: string }>;
+        cancelDownload: () => Promise<void>;
+        install: (version: string) => Promise<{ ok: boolean; logPath: string }>;
+        getLastResult: () => Promise<string | null>;
+        onProgress: (callback: (progress: ICommon.IUpdaterProgress) => void) => () => void;
+        onStatus: (callback: (status: ICommon.IUpdaterStatus) => void) => () => void;
+    }
 
 }
 
@@ -43,4 +51,4 @@ const utils = window["@shared/utils" as any] as unknown as IMod;
 
 
 export default utils;
-export const { fs: fsUtil, app: appUtil, appWindow: appWindowUtil, shell: shellUtil, dialog: dialogUtil } = utils;
+export const { fs: fsUtil, app: appUtil, appWindow: appWindowUtil, shell: shellUtil, dialog: dialogUtil, updater: updaterUtil } = utils;

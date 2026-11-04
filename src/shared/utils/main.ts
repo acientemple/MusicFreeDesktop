@@ -1,9 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { IWindowManager } from "@/types/main/window-manager";
 import fs from "fs/promises";
-import { appUpdateSources } from "@/common/constant";
-import axios from "axios";
-import { compare } from "compare-versions";
 
 class Utils {
     private windowManager: IWindowManager;
@@ -25,25 +22,6 @@ class Utils {
 
         ipcMain.handle("@shared/utils/app-get-path", (_, pathName) => {
             return app.getPath(pathName);
-        });
-
-        ipcMain.handle("@shared/utils/check-update", async () => {
-            const currentVersion = app.getVersion();
-            const updateInfo: ICommon.IUpdateInfo = {
-                version: currentVersion,
-            };
-            for (let i = 0; i < appUpdateSources.length; ++i) {
-                try {
-                    const rawInfo = (await axios.get(appUpdateSources[i])).data;
-                    if (compare(rawInfo.version, currentVersion, ">")) {
-                        updateInfo.update = rawInfo;
-                        return updateInfo;
-                    }
-                } catch {
-                    // pass
-                }
-            }
-            return updateInfo;
         });
 
         ipcMain.on("@shared/utils/clear-cache", () => {
