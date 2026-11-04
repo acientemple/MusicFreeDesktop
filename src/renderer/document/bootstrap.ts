@@ -221,7 +221,7 @@ function setupCommandAndEvents() {
 
     trackPlayer.on(PlayerEvents.CurrentLyricChanged, lyric => {
         messageBus.syncAppState({
-            lyricText: lyric.lrc,
+            lyricText: lyric?.lrc,
             parsedLrc: lyric,
         });
     });
