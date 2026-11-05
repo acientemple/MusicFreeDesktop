@@ -1,6 +1,4 @@
 .modal--music-video-search-container {
-  width: 600px;
-  max-height: 540px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -21,8 +19,7 @@
 
   & .video-search-body {
     flex: 1;
-    min-height: 260px;
-    max-height: 440px;
+    min-height: 0;
     overflow-y: auto;
 
     & .video-item {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Base from "../Base";
+import DraggableWindow from "../Base/DraggableWindow";
 import "./index.scss";
 import Loading from "@/renderer/components/Loading";
 import PluginManager from "@shared/plugin-manager/renderer";
@@ -100,8 +101,14 @@ export default function MVPlayer(props: IProps) {
     }, [musicItem]);
 
     return (
-        <Base defaultClose withBlur={false}>
-            <div className="modal--mv-player-container shadow backdrop-color">
+        <Base withBlur={false}>
+            <DraggableWindow
+                className="modal--mv-player-container shadow backdrop-color"
+                defaultWidth={880}
+                defaultHeight={580}
+                minWidth={420}
+                minHeight={300}
+            >
                 <Base.Header>
                     <div className="header-title">
                         {musicItem
@@ -135,7 +142,7 @@ export default function MVPlayer(props: IProps) {
                         <Loading></Loading>
                     )}
                 </div>
-            </div>
+            </DraggableWindow>
         </Base>
     );
 }

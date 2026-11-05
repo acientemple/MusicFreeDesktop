@@ -1,0 +1,34 @@
+.components--draggable-window {
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  & .components--modal-base-header {
+    cursor: move;
+  }
+
+  & .components--draggable-window-resize {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 18px;
+    height: 18px;
+    cursor: nwse-resize;
+    z-index: 2;
+
+    &::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 8px;
+      height: 8px;
+      border-right: 2px solid var(--dividerColor);
+      border-bottom: 2px solid var(--dividerColor);
+      opacity: 0.6;
+    }
+  }
+}

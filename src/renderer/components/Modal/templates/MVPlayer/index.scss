@@ -1,5 +1,4 @@
 .modal--mv-player-container {
-  width: min(880px, 80vw);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -17,11 +16,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 240px;
+    flex: 1;
+    min-height: 0;
 
     & .mv-player-video {
       width: 100%;
-      max-height: 70vh;
+      height: 100%;
+      object-fit: contain;
       border-radius: 6px;
       background-color: #000;
       outline: none;

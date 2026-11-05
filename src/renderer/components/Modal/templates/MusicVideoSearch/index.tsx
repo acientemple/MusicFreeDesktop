@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Base from "../Base";
+import DraggableWindow from "../Base/DraggableWindow";
 import "./index.scss";
 import Loading from "@/renderer/components/Loading";
 import Empty from "@/renderer/components/Empty";
@@ -98,8 +99,14 @@ export default function MusicVideoSearch(props: IProps) {
     }, [musicItem?.platform, musicItem?.id, pluginKey]);
 
     return (
-        <Base defaultClose withBlur={false}>
-            <div className="modal--music-video-search-container shadow backdrop-color">
+        <Base withBlur={false}>
+            <DraggableWindow
+                className="modal--music-video-search-container shadow backdrop-color"
+                defaultWidth={600}
+                defaultHeight={560}
+                minWidth={420}
+                minHeight={320}
+            >
                 <Base.Header>
                     <div className="header-title">
                         {t("modal.music_video_search")}
@@ -169,7 +176,7 @@ export default function MusicVideoSearch(props: IProps) {
                         </div>
                     )}
                 </div>
-            </div>
+            </DraggableWindow>
         </Base>
     );
 }
