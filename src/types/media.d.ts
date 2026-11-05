@@ -68,6 +68,14 @@ declare namespace IMusic {
     album?: string;
   }
 
+  /** 歌曲挑定的 MV */
+  interface IMusicMvItem {
+    platform: string;
+    id: string;
+    /** 选中的 MV 条目 */
+    mv: IMusicItem;
+  }
+
   // 音乐的内部数据
   interface IMusicItemInternalData {
     downloadData?: {

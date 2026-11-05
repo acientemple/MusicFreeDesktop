@@ -282,6 +282,8 @@
     "music_video_search_empty": "No MV found for this song",
     "music_video_search_unsupported": "No plugin supports MV search",
     "music_video_search_play_failed": "No video source available for this MV",
+    "music_video_search_in_use": "In use",
+    "music_video_search_clear": "Clear",
     "edit_music_meta": "Edit Song Info",
     "edit_music_meta_title_empty": "Title cannot be empty",
     "edit_music_meta_saved": "Song info saved",

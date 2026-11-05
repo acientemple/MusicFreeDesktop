@@ -18,6 +18,7 @@ import { IAppState } from "@shared/message-bus/type";
 import MusicDetail from "@renderer/components/MusicDetail";
 import shortCut from "@shared/short-cut/renderer";
 import { setupMusicMeta } from "@renderer/core/music-meta";
+import { setupMusicMv } from "@renderer/core/music-mv";
 
 
 setAutoFreeze(false);
@@ -31,6 +32,7 @@ export default async function () {
         MusicSheet.frontend.setupMusicSheets(),
         trackPlayer.setup(),
         setupMusicMeta(),
+        setupMusicMv(),
     ]);
     await setupI18n();
     shortCut.setup();

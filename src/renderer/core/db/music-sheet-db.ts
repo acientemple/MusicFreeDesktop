@@ -15,6 +15,8 @@ class MusicSheetDB extends Dexie {
     }>;
     /** 用户手动改过的歌曲信息，只存被改过的字段 */
     musicMeta: Table<IMusic.IMusicMetaItem>;
+    /** 歌曲挑定的 MV */
+    musicMv: Table<IMusic.IMusicMvItem>;
 
     constructor() {
         super("musicSheetDB");
@@ -31,6 +33,16 @@ class MusicSheetDB extends Dexie {
             localMusicStore: "[platform+id], title, artist, album, $$localPath",
             /** 歌曲信息覆盖 */
             musicMeta: "[platform+id]",
+        });
+        this.version(1.3).stores({
+            sheets: "&id, title, artist, createAt, $$sortIndex",
+            musicStore: "[platform+id], title, artist, album",
+            /** 本地音乐 */
+            localMusicStore: "[platform+id], title, artist, album, $$localPath",
+            /** 歌曲信息覆盖 */
+            musicMeta: "[platform+id]",
+            /** 歌曲挑定的 MV */
+            musicMv: "[platform+id]",
         });
     }
 }

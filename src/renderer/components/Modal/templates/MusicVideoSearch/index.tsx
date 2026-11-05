@@ -11,6 +11,7 @@ import PluginManager, { useSupportedPlugin } from "@shared/plugin-manager/render
 import { hideModal, showModal } from "../..";
 import { getMediaPrimaryKey, isSameMedia } from "@/common/media-util";
 import { applyMusicMeta } from "@/renderer/core/music-meta";
+import { clearMusicMv, setMusicMv, useMusicMv } from "@/renderer/core/music-mv";
 import trackPlayer from "@renderer/core/track-player";
 
 interface IProps {
@@ -45,6 +46,10 @@ export default function MusicVideoSearch(props: IProps) {
         () => plugins.map((item) => item.hash).join("|"),
         [plugins],
     );
+
+    /** 这首歌已经挑过的 MV */
+    const mvMap = useMusicMv();
+    const boundMv = musicItem ? mvMap[getMediaPrimaryKey(musicItem)] : undefined;
 
     useEffect(() => {
         let canceled = false;
@@ -113,7 +118,20 @@ export default function MusicVideoSearch(props: IProps) {
                     </div>
                 </Base.Header>
                 <div className="video-search-subtitle">
-                    {displayItem?.title} - {displayItem?.artist}
+                    <span className="subtitle-text">
+                        {displayItem?.title} - {displayItem?.artist}
+                    </span>
+                    {boundMv && musicItem ? (
+                        <span
+                            className="subtitle-clear"
+                            role="button"
+                            onClick={() => {
+                                clearMusicMv(musicItem).catch(console.error);
+                            }}
+                        >
+                            {t("modal.music_video_search_clear")}
+                        </span>
+                    ) : null}
                 </div>
                 <div className="video-search-body">
                     {loading ? (
@@ -121,6 +139,10 @@ export default function MusicVideoSearch(props: IProps) {
                     ) : items.length ? (
                         items.map((item) => {
                             const duration = formatDuration(item.duration);
+                            const isBound =
+                                !!boundMv &&
+                                getMediaPrimaryKey(boundMv) ===
+                                    getMediaPrimaryKey(item);
                             return (
                                 <div
                                     className="video-item"
@@ -136,6 +158,12 @@ export default function MusicVideoSearch(props: IProps) {
                                             )
                                         ) {
                                             trackPlayer.playMusic(musicItem);
+                                        }
+                                        // 记住挑过的 MV，下次直接看同一个
+                                        if (musicItem) {
+                                            setMusicMv(musicItem, item).catch(
+                                                console.error,
+                                            );
                                         }
                                         hideModal();
                                         showModal("MVPlayer", {
@@ -156,6 +184,13 @@ export default function MusicVideoSearch(props: IProps) {
                                         </div>
                                     </div>
                                     <div className="video-tags">
+                                        {isBound ? (
+                                            <div className="in-use-tag">
+                                                {t(
+                                                    "modal.music_video_search_in_use",
+                                                )}
+                                            </div>
+                                        ) : null}
                                         <div className="source-tag">
                                             {item.platform}
                                         </div>

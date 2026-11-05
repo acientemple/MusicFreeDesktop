@@ -14,6 +14,8 @@ import { showModal } from "@renderer/components/Modal";
 import { useSupportedPlugin } from "@shared/plugin-manager/renderer";
 import SvgAsset from "@renderer/components/SvgAsset";
 import { applyMusicMeta, useMusicMeta } from "@renderer/core/music-meta";
+import { useMusicMv } from "@renderer/core/music-mv";
+import { getMediaPrimaryKey } from "@/common/media-util";
 import isLocalMusic from "@renderer/utils/is-local-music";
 
 export const isMusicDetailShown = musicDetailShownStore.getValue;
@@ -32,9 +34,12 @@ function MusicDetail() {
     const { t } = useTranslation();
 
     const mvPlugins = useSupportedPlugin("getVideoSource");
+    /** 这首歌挑过的 MV，有它就不用再搜一遍 */
+    const boundMv = useMusicMv()[musicItem ? getMediaPrimaryKey(musicItem) : ""];
     const canWatchMv =
-        !!musicItem?.platform &&
-        mvPlugins.some((plugin) => plugin.platform === musicItem.platform);
+        (!!musicItem?.platform &&
+            mvPlugins.some((plugin) => plugin.platform === musicItem.platform)) ||
+        !!boundMv;
 
     // 找完整播放版本不挑来源，任何支持该方法的插件都能给候选
     const alternativePlugins = useSupportedPlugin("getMusicAlternatives");
@@ -115,7 +120,10 @@ function MusicDetail() {
                                     role="button"
                                     title={t("music_detail.watch_mv")}
                                     onClick={() => {
-                                        showModal("MVPlayer", { musicItem });
+                                        showModal("MVPlayer", {
+                                            musicItem,
+                                            videoItem: boundMv,
+                                        });
                                     }}
                                 >
                                     <SvgAsset iconName="motion-play"></SvgAsset>

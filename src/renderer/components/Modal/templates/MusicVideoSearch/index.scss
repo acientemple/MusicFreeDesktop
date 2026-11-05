@@ -12,9 +12,23 @@
     padding: 10px 24px 4px;
     font-size: 0.9rem;
     opacity: 0.7;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    & .subtitle-text {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    & .subtitle-clear {
+      flex-shrink: 0;
+      color: var(--primaryColor);
+      cursor: pointer;
+    }
   }
 
   & .video-search-body {
@@ -72,6 +86,11 @@
         align-items: center;
         gap: 8px;
         flex-shrink: 0;
+
+        & .in-use-tag {
+          font-size: 0.9rem;
+          color: var(--primaryColor);
+        }
 
         & .source-tag {
           font-size: 0.9rem;

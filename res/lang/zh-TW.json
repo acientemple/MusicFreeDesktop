@@ -282,6 +282,8 @@
     "music_video_search_empty": "沒有找到這首歌的 MV",
     "music_video_search_unsupported": "沒有外掛支援搜尋 MV",
     "music_video_search_play_failed": "該 MV 暫無可用影片來源",
+    "music_video_search_in_use": "正在使用",
+    "music_video_search_clear": "取消使用",
     "edit_music_meta": "編輯歌曲資訊",
     "edit_music_meta_title_empty": "標題不能為空",
     "edit_music_meta_saved": "已儲存歌曲資訊",
