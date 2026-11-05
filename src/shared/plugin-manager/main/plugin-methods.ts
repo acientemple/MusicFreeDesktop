@@ -116,6 +116,29 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         }
     }
 
+    /** 获取可下载的视频文件（音视频合一） */
+    async getVideoDownloadSource(
+        musicItem: IMedia.IMediaBase,
+        quality: IMusic.IQualityKey = "standard",
+    ): Promise<IPlugin.IVideoDownloadSourceResult | null> {
+        if (!this.plugin.instance.getVideoDownloadSource) {
+            return null;
+        }
+        try {
+            const result = await this.plugin.instance.getVideoDownloadSource(
+                resetMediaItem(musicItem, undefined, true),
+                quality,
+            );
+            if (!result?.url) {
+                return null;
+            }
+            return result;
+        } catch (e: any) {
+            console.log(e);
+            return null;
+        }
+    }
+
     /** 获取音乐详情 */
     async getMusicInfo(
         musicItem: IMedia.IMediaBase,

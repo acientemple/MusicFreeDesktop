@@ -1,13 +1,28 @@
 import { useRef, useState } from "react";
 import trackPlayer from "@renderer/core/track-player";
-import { usePlayerState, useProgress } from "@renderer/core/track-player/hooks";
-import { PlayerState } from "@/common/constant";
+import {
+    usePlayerState,
+    useProgress,
+    useVolume,
+} from "@renderer/core/track-player/hooks";
+import { DownloadState, PlayerState } from "@/common/constant";
 import SvgAsset from "@renderer/components/SvgAsset";
 import { useTranslation } from "react-i18next";
+import Slider from "rc-slider";
+import PluginManager from "@shared/plugin-manager/renderer";
+import ServiceManager from "@shared/service-manager/renderer";
+import AppConfig from "@shared/app-config/renderer";
+import Downloader from "@renderer/core/downloader";
+import { getGlobalContext } from "@/shared/global-context/renderer";
 
 interface IProps {
     /** 画面元素，进度与播放状态都要跟它对齐 */
     videoRef?: React.RefObject<HTMLVideoElement>;
+    /** 画面条目，下载用 */
+    videoItem?: IMusic.IMusicItem;
+    quality?: IMusic.IQualityKey;
+    onToggleMaximize?: () => void;
+    isMaximized?: boolean;
 }
 
 function formatDuration(seconds: number) {
@@ -19,15 +34,27 @@ function formatDuration(seconds: number) {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
-export default function PlayerControl({ videoRef }: IProps) {
+export default function PlayerControl({
+    videoRef,
+    videoItem,
+    quality = "standard",
+    onToggleMaximize,
+    isMaximized,
+}: IProps) {
     const { t } = useTranslation();
     const { currentTime, duration } = useProgress();
     const playerState = usePlayerState();
     const isPlaying = playerState === PlayerState.Playing;
+    const volume = useVolume();
 
     const barRef = useRef<HTMLDivElement>(null);
     const draggingRef = useRef(false);
     const [dragPercent, setDragPercent] = useState<number | null>(null);
+    const [downloadState, setDownloadState] = useState<{
+        state: DownloadState;
+        downloaded?: number;
+        total?: number;
+    } | null>(null);
 
     const hasDuration = isFinite(duration) && duration > 0;
     const percent =
@@ -71,6 +98,76 @@ export default function PlayerControl({ videoRef }: IProps) {
         }
     };
 
+    const onDownload = async () => {
+        if (!videoItem?.platform) {
+            return;
+        }
+        if (downloadState?.state === DownloadState.DOWNLOADING) {
+            return;
+        }
+        setDownloadState({ state: DownloadState.DOWNLOADING, downloaded: 0 });
+        try {
+            const source = await PluginManager.callPluginDelegateMethod(
+                { platform: videoItem.platform },
+                "getVideoDownloadSource",
+                videoItem,
+                quality,
+            );
+            if (!source?.url) {
+                throw new Error("no download source");
+            }
+            const headers = source.headers ?? {};
+            // 视频源要校验 Referer，跨域直连会被拦，走本地转发服务
+            const proxied =
+                ServiceManager.RequestForwarderService.forwardRequest(
+                    source.url,
+                    "GET",
+                    headers,
+                ) ?? source.url;
+            const rawName = String(
+                source.filename || videoItem.title || "mv",
+            ).replace(/[/|\\?*"<>:]/g, "_");
+            const ext = rawName.match(/\.([a-z0-9]+)$/i)?.[1] ?? "mp4";
+            const baseName = rawName.replace(/\.[a-z0-9]+$/i, "");
+            const downloadBasePath =
+                AppConfig.getConfig("download.path") ??
+                getGlobalContext().appPath.downloads;
+            const filePath = window.path.resolve(
+                downloadBasePath,
+                `./${baseName}.${ext}`,
+            );
+            await Downloader.downloadFileToDisk(
+                { url: proxied, userAgent: headers["user-agent"] },
+                filePath,
+                (status) => {
+                    setDownloadState(status);
+                },
+            );
+        } catch (e) {
+            setDownloadState({ state: DownloadState.ERROR });
+        }
+    };
+
+    const downloadTitle = () => {
+        switch (downloadState?.state) {
+            case DownloadState.DOWNLOADING: {
+                const total = downloadState.total ?? 0;
+                const done = downloadState.downloaded ?? 0;
+                return total
+                    ? `${t("modal.mv_player_downloading")} ${Math.round(
+                          (done / total) * 100,
+                      )}%`
+                    : t("modal.mv_player_downloading");
+            }
+            case DownloadState.DONE:
+                return t("modal.mv_player_downloaded");
+            case DownloadState.ERROR:
+                return t("modal.mv_player_download_failed");
+            default:
+                return t("modal.mv_player_download");
+        }
+    };
+
     return (
         <div className="mv-player-control">
             <span className="mv-player-time">{formatDuration(currentTime)}</span>
@@ -81,7 +178,10 @@ export default function PlayerControl({ videoRef }: IProps) {
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
             >
-                <div className="mv-player-progress-active" style={{ width: `${percent * 100}%` }}></div>
+                <div
+                    className="mv-player-progress-active"
+                    style={{ width: `${percent * 100}%` }}
+                ></div>
             </div>
             <span className="mv-player-time">{formatDuration(duration)}</span>
             <div
@@ -100,6 +200,73 @@ export default function PlayerControl({ videoRef }: IProps) {
                 }}
             >
                 <SvgAsset iconName={isPlaying ? "pause" : "play"}></SvgAsset>
+            </div>
+            <div
+                className="mv-player-volume"
+                title={t(volume === 0 ? "music_bar.unmute" : "music_bar.mute")}
+            >
+                <div
+                    className="mv-player-volume-icon"
+                    role="button"
+                    onClick={() => {
+                        trackPlayer.setVolume(volume === 0 ? 1 : 0);
+                    }}
+                >
+                    <SvgAsset
+                        iconName={volume === 0 ? "speaker-x-mark" : "speaker-wave"}
+                    ></SvgAsset>
+                </div>
+                <div className="mv-player-volume-slider">
+                    <Slider
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={volume}
+                        onChange={(val) => {
+                            trackPlayer.setVolume(val as number);
+                        }}
+                        styles={{
+                            track: {
+                                background: "var(--primaryColor)",
+                            },
+                            handle: {
+                                width: 10,
+                                height: 10,
+                                marginLeft: -4,
+                                borderColor: "var(--primaryColor)",
+                            },
+                            rail: {
+                                background: "var(--dividerColor)",
+                            },
+                        }}
+                    ></Slider>
+                </div>
+            </div>
+            <div
+                className="mv-player-btn"
+                role="button"
+                title={t(
+                    isMaximized
+                        ? "modal.mv_player_restore"
+                        : "modal.mv_player_maximize",
+                )}
+                onClick={() => {
+                    onToggleMaximize?.();
+                }}
+            >
+                <SvgAsset
+                    iconName={
+                        isMaximized ? "arrows-pointing-in" : "arrows-pointing-out"
+                    }
+                ></SvgAsset>
+            </div>
+            <div
+                className="mv-player-btn"
+                role="button"
+                title={downloadTitle()}
+                onClick={onDownload}
+            >
+                <SvgAsset iconName="array-download-tray"></SvgAsset>
             </div>
         </div>
     );

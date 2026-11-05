@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Base from "../Base";
-import DraggableWindow from "../Base/DraggableWindow";
+import DraggableWindow, { IDraggableWindowHandle } from "../Base/DraggableWindow";
 import PlayerControl from "./PlayerControl";
 import "./index.scss";
 import Loading from "@/renderer/components/Loading";
@@ -26,13 +26,17 @@ export default function MVPlayer(props: IProps) {
 
     const [videoUrl, setVideoUrl] = useState("");
     const [error, setError] = useState<{ key?: string; message?: string }>(null);
+    const [maximized, setMaximized] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const windowRef = useRef<IDraggableWindowHandle>(null);
+
+    /** 画面来自哪：搜索 MV 时与音频不是同一条 */
+    const visualItem = useMemo(() => videoItem ?? musicItem, [videoItem, musicItem]);
 
     useEffect(() => {
         let canceled = false;
         (async () => {
             try {
-                const visualItem = videoItem ?? musicItem;
                 const source = await PluginManager.callPluginDelegateMethod(
                     { platform: visualItem?.platform },
                     "getVideoSource",
@@ -104,11 +108,13 @@ export default function MVPlayer(props: IProps) {
     return (
         <Base withBlur={false}>
             <DraggableWindow
+                ref={windowRef}
                 className="modal--mv-player-container shadow backdrop-color"
                 defaultWidth={880}
                 defaultHeight={580}
                 minWidth={420}
                 minHeight={300}
+                onMaximizeChange={setMaximized}
             >
                 <Base.Header>
                     <div className="header-title">
@@ -142,7 +148,15 @@ export default function MVPlayer(props: IProps) {
                         <Loading></Loading>
                     )}
                 </div>
-                <PlayerControl videoRef={videoRef}></PlayerControl>
+                <PlayerControl
+                    videoRef={videoRef}
+                    videoItem={visualItem}
+                    quality={quality}
+                    onToggleMaximize={() => {
+                        windowRef.current?.toggleMaximize();
+                    }}
+                    isMaximized={maximized}
+                ></PlayerControl>
             </DraggableWindow>
         </Base>
     );

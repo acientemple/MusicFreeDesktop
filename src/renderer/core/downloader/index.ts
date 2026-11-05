@@ -197,6 +197,35 @@ async function downloadMusicImpl(
     }
 }
 
+/**
+ * 通用的文件下载，MV 视频这类非歌曲资源走这里。
+ * 传进来的 url 最好是已经处理好请求头的地址（本地转发服务）。
+ */
+async function downloadFileToDisk(
+    mediaSource: IMusic.IMusicSource,
+    filePath: string,
+    onStateChange: (status: IDownloadStatus) => void,
+): Promise<void> {
+    if (!downloaderWorker) {
+        setupDownloaderWorker();
+    }
+    return new Promise<void>((resolve) => {
+        downloaderWorker.downloadFile(
+            mediaSource,
+            filePath,
+            Comlink.proxy((dataState) => {
+                onStateChange(dataState);
+                if (
+                    dataState.state === DownloadState.DONE ||
+                    dataState.state === DownloadState.ERROR
+                ) {
+                    resolve();
+                }
+            }),
+        );
+    });
+}
+
 function useDownloadStatus(musicItem: IMusic.IMusicItem) {
     const [downloadStatus, setDownloadStatus] = useState<IDownloadStatus | null>(
         null,
@@ -236,6 +265,7 @@ function useDownloadState(musicItem: IMusic.IMusicItem) {
 const Downloader = {
     setupDownloader,
     startDownload,
+    downloadFileToDisk,
     useDownloadStatus,
     useDownloadingMusicList: downloadingMusicStore.useValue,
     useDownloaded,

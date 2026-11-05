@@ -81,6 +81,16 @@ declare namespace IPlugin {
     data: IMusic.IMusicItem[];
   }
 
+  /** 可直接下载的视频源，需要是音视频合一的单个文件 */
+  interface IVideoDownloadSourceResult {
+    url: string;
+    headers?: Record<string, string>;
+    /** 建议的文件名（含扩展名） */
+    filename?: string;
+    /** 文件大小（字节） */
+    size?: number;
+  }
+
   interface IPluginDefine {
     /** 来源名 */
     platform: string;
@@ -120,6 +130,11 @@ declare namespace IPlugin {
       musicItem: IMusic.IMusicItemPartial,
       quality: IMusic.IQualityKey
     ) => Promise<IMediaSourceResult | null>;
+    /** 获取可下载的视频文件（音视频合一），可选实现 */
+    getVideoDownloadSource?: (
+      musicItem: IMusic.IMusicItemPartial,
+      quality: IMusic.IQualityKey
+    ) => Promise<IVideoDownloadSourceResult | null>;
     /** 获取歌词 */
     getLyric?: (
       musicItem: IMusic.IMusicItemPartial

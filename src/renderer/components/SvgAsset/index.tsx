@@ -4,6 +4,8 @@ export type SvgAssetIconNames =
     | "album"
     | "array-download-tray"
     | "arrow-left-end-on-rectangle"
+    | "arrows-pointing-in"
+    | "arrows-pointing-out"
     | "cd"
     | "chat-bubble-left-ellipsis"
     | "check"
