@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Base from "../Base";
 import DraggableWindow from "../Base/DraggableWindow";
+import PlayerControl from "./PlayerControl";
 import "./index.scss";
 import Loading from "@/renderer/components/Loading";
 import PluginManager from "@shared/plugin-manager/renderer";
@@ -122,7 +123,6 @@ export default function MVPlayer(props: IProps) {
                             ref={videoRef}
                             className="mv-player-video"
                             src={videoUrl}
-                            controls
                             autoPlay
                             muted
                             playsInline
@@ -142,6 +142,7 @@ export default function MVPlayer(props: IProps) {
                         <Loading></Loading>
                     )}
                 </div>
+                <PlayerControl videoRef={videoRef}></PlayerControl>
             </DraggableWindow>
         </Base>
     );
