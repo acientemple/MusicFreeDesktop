@@ -120,6 +120,7 @@
   "music_list_context_menu": {
     "next_play": "下一首播放",
     "search_full_version": "搜索完整播放版本",
+    "search_mv": "搜索 MV",
     "edit_music_meta": "编辑歌曲信息",
     "add_to_my_sheets": "添加到歌单",
     "remove_from_sheet": "从歌单内删除",
@@ -194,6 +195,7 @@
     "hide_translation": "隐藏翻译",
     "watch_mv": "观看 MV",
     "search_full_version": "找完整版",
+    "search_mv": "搜索 MV",
     "edit_music_meta": "编辑歌曲信息"
   },
   "bottom_loading_state": {
@@ -255,6 +257,10 @@
     "music_alternatives_origin_tag": "原唱",
     "music_alternatives_replaced": "已替换为完整版",
     "music_alternatives_replace_fail": "替换失败：{{reason}}",
+    "music_video_search": "搜索 MV",
+    "music_video_search_empty": "没有找到这首歌的 MV",
+    "music_video_search_unsupported": "没有插件支持搜索 MV",
+    "music_video_search_play_failed": "该 MV 暂无可用视频源",
     "edit_music_meta": "编辑歌曲信息",
     "edit_music_meta_title_empty": "标题不能为空",
     "edit_music_meta_saved": "已保存歌曲信息",

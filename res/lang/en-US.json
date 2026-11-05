@@ -135,6 +135,7 @@
   "music_list_context_menu": {
     "next_play": "Play Next",
     "search_full_version": "Search Full-Playable Versions",
+    "search_mv": "Search MV",
     "edit_music_meta": "Edit Song Info",
     "add_to_my_sheets": "Add to Playlist",
     "remove_from_sheet": "Remove from Playlist",
@@ -215,6 +216,7 @@
     "hide_translation": "Hide Translation",
     "watch_mv": "Watch MV",
     "search_full_version": "Find Full Version",
+    "search_mv": "Search MV",
     "edit_music_meta": "Edit Song Info"
   },
   "bottom_loading_state": {
@@ -276,6 +278,10 @@
     "music_alternatives_origin_tag": "Original Artist",
     "music_alternatives_replaced": "Replaced with the full version",
     "music_alternatives_replace_fail": "Replace failed: {{reason}}",
+    "music_video_search": "Search MV",
+    "music_video_search_empty": "No MV found for this song",
+    "music_video_search_unsupported": "No plugin supports MV search",
+    "music_video_search_play_failed": "No video source available for this MV",
     "edit_music_meta": "Edit Song Info",
     "edit_music_meta_title_empty": "Title cannot be empty",
     "edit_music_meta_saved": "Song info saved",

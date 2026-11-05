@@ -6,6 +6,7 @@ import EditMusicMeta from "./EditMusicMeta";
 import ExitConfirm from "./ExitConfirm";
 import ImportMusicSheet from "./ImportMusicSheet";
 import MusicAlternatives from "./MusicAlternatives";
+import MusicVideoSearch from "./MusicVideoSearch";
 import MVPlayer from "./MVPlayer";
 import PluginSubscription from "./PluginSubscription";
 import Reconfirm from "./Reconfirm";
@@ -35,5 +36,6 @@ export default {
     ImportMusicSheet,
     MVPlayer,
     MusicAlternatives,
+    MusicVideoSearch,
     EditMusicMeta,
 };

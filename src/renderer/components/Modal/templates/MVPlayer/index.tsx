@@ -10,6 +10,8 @@ import { applyMusicMeta } from "@/renderer/core/music-meta";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
+    /** 画面来源；搜索 MV 时与音频不是同一条 */
+    videoItem?: IMusic.IMusicItem;
     quality?: IMusic.IQualityKey;
 }
 
@@ -17,7 +19,7 @@ interface IProps {
 const MAX_DRIFT = 0.4;
 
 export default function MVPlayer(props: IProps) {
-    const { musicItem, quality = "standard" } = props;
+    const { musicItem, videoItem, quality = "standard" } = props;
     const { t } = useTranslation();
 
     const [videoUrl, setVideoUrl] = useState("");
@@ -28,17 +30,22 @@ export default function MVPlayer(props: IProps) {
         let canceled = false;
         (async () => {
             try {
+                const visualItem = videoItem ?? musicItem;
                 const source = await PluginManager.callPluginDelegateMethod(
-                    { platform: musicItem?.platform },
+                    { platform: visualItem?.platform },
                     "getVideoSource",
-                    musicItem,
+                    visualItem,
                     quality,
                 );
                 if (canceled) {
                     return;
                 }
                 if (!source?.url) {
-                    setError({ key: "modal.mv_player_no_source" });
+                    setError({
+                        key: videoItem
+                            ? "modal.music_video_search_play_failed"
+                            : "modal.mv_player_no_source",
+                    });
                     return;
                 }
                 // 视频源普遍要校验 Referer，video 元素带不了请求头，只能走本地转发服务
@@ -60,7 +67,7 @@ export default function MVPlayer(props: IProps) {
         return () => {
             canceled = true;
         };
-    }, [musicItem, quality]);
+    }, [musicItem, videoItem, quality]);
 
     // 画面跟着播放器的进度走，音视频分离的两个文件否则会越差越多
     useEffect(() => {

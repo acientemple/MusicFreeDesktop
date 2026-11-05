@@ -75,6 +75,12 @@ declare namespace IPlugin {
     data: IMusic.IMusicItem[];
   }
 
+  /** MV 候选：条目本身要能直接喂给 getVideoSource */
+  interface IGetVideoCandidatesResult {
+    isEnd?: boolean;
+    data: IMusic.IMusicItem[];
+  }
+
   interface IPluginDefine {
     /** 来源名 */
     platform: string;
@@ -156,6 +162,11 @@ declare namespace IPlugin {
       musicItem: IMusic.IMusicItemPartial,
       page?: number
     ) => Promise<IGetAlternativesResult | null>;
+    /** 查找这首歌对应的 MV 候选 */
+    getMusicVideoCandidates?: (
+      musicItem: IMusic.IMusicItemPartial,
+      page?: number
+    ) => Promise<IGetVideoCandidatesResult | null>;
   }
 
   export interface IPluginInstance extends IPluginDefine {

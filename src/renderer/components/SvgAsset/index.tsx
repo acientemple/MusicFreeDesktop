@@ -18,6 +18,7 @@ export type SvgAssetIconNames =
     | "cog-8-tooth"
     | "dashboard-speed"
     | "document-plus"
+    | "film"
     | "fire"
     | "folder-open"
     | "font-size-larger"

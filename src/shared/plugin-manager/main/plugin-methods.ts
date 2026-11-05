@@ -538,4 +538,32 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
             };
         }
     }
+
+    /** 查找这首歌对应的 MV 候选 */
+    async getMusicVideoCandidates(
+        musicItem: IMusic.IMusicItem,
+        page = 1,
+    ): Promise<IPlugin.IGetVideoCandidatesResult> {
+        try {
+            const result = await this.plugin.instance?.getMusicVideoCandidates?.(
+                resetMediaItem(musicItem, undefined, true),
+                page,
+            );
+            if (!result || !Array.isArray(result.data)) {
+                throw new Error();
+            }
+            // platform 改写成插件名，之后 getVideoSource 才能按 platform 找到插件
+            result.data.forEach((item) => resetMediaItem(item, this.plugin.name));
+            return {
+                isEnd: result.isEnd ?? true,
+                data: result.data,
+            };
+        } catch (e: any) {
+            console.log(e);
+            return {
+                isEnd: true,
+                data: [],
+            };
+        }
+    }
 }

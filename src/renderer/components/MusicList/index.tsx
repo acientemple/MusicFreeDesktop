@@ -213,6 +213,16 @@ export function showMusicContextMenu(
             },
         },
         {
+            title: i18n.t("music_list_context_menu.search_mv"),
+            icon: "film",
+            show: !isArray && !isLocalMusic(musicItems),
+            onClick() {
+                showModal("MusicVideoSearch", {
+                    musicItem: musicItems as IMusic.IMusicItem,
+                });
+            },
+        },
+        {
             title: i18n.t("music_list_context_menu.add_to_my_sheets"),
             icon: "document-plus",
             onClick() {

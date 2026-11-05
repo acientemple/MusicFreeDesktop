@@ -40,6 +40,10 @@ function MusicDetail() {
     const alternativePlugins = useSupportedPlugin("getMusicAlternatives");
     const canSearchFullVersion = !!musicItem && alternativePlugins.length > 0;
 
+    // 按歌曲找 MV，候选来自所有支持该方法的插件
+    const mvSearchPlugins = useSupportedPlugin("getMusicVideoCandidates");
+    const canSearchMv = !!musicItem && mvSearchPlugins.length > 0;
+
     // 本地音乐的信息来自文件标签，不支持改
     const canEditMeta = !!musicItem && !isLocalMusic(musicItem);
 
@@ -103,7 +107,7 @@ function MusicDetail() {
                         onError={setFallbackAlbum}
                         src={musicItem?.artwork ?? albumImg}
                     ></img>
-                    {canWatchMv || canSearchFullVersion || canEditMeta ? (
+                    {canWatchMv || canSearchFullVersion || canSearchMv || canEditMeta ? (
                         <div className="music-options">
                             {canWatchMv ? (
                                 <div
@@ -129,6 +133,19 @@ function MusicDetail() {
                                 >
                                     <SvgAsset iconName="magnifying-glass"></SvgAsset>
                                     <span>{t("music_detail.search_full_version")}</span>
+                                </div>
+                            ) : null}
+                            {canSearchMv ? (
+                                <div
+                                    className="music-option-button"
+                                    role="button"
+                                    title={t("music_detail.search_mv")}
+                                    onClick={() => {
+                                        showModal("MusicVideoSearch", { musicItem });
+                                    }}
+                                >
+                                    <SvgAsset iconName="film"></SvgAsset>
+                                    <span>{t("music_detail.search_mv")}</span>
                                 </div>
                             ) : null}
                             {canEditMeta ? (
