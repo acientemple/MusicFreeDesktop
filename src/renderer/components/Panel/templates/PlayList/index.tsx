@@ -1,5 +1,5 @@
 import "./index.scss";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import trackPlayer from "@renderer/core/track-player";
 import Condition, { IfTruthy } from "@/renderer/components/Condition";
 import Empty from "@/renderer/components/Empty";
@@ -16,6 +16,10 @@ import hotkeys from "hotkeys-js";
 import { Trans, useTranslation } from "react-i18next";
 import DragReceiver, { startDrag } from "@/renderer/components/DragReceiver";
 import { useCurrentMusic, useMusicQueue } from "@renderer/core/track-player/hooks";
+import {
+    applyMusicMetaToList,
+    useMusicMeta,
+} from "@/renderer/core/music-meta";
 
 const estimateItemHeight = 2.6 * rem;
 const DRAG_TAG = "Playlist";
@@ -34,9 +38,16 @@ export default function PlayList(props: IProps) {
 
     const { t } = useTranslation();
 
+    const musicMeta = useMusicMeta();
+    /** 展示用队列：套用用户手动改过的信息，播放时仍用原始条目 */
+    const displayQueue = useMemo(
+        () => applyMusicMetaToList(musicQueue),
+        [musicQueue, musicMeta],
+    );
+
     const virtualController = useVirtualList({
         estimateItemHeight: estimateItemHeight,
-        data: musicQueue,
+        data: displayQueue,
         getScrollElement() {
             return scrollElementRef.current;
         },
@@ -126,6 +137,8 @@ export default function PlayList(props: IProps) {
                         {virtualController.virtualItems.map((virtualItem) => {
                             const musicItem = virtualItem.dataItem;
                             const rowIndex = virtualItem.rowIndex;
+                            /** 原始条目，播放等操作都用它 */
+                            const rawItem = musicQueue[rowIndex] ?? musicItem;
                             return (
                                 <div
                                     key={virtualItem.rowIndex}
@@ -139,7 +152,7 @@ export default function PlayList(props: IProps) {
                                         startDrag(e, rowIndex, DRAG_TAG);
                                     }}
                                     onDoubleClick={() => {
-                                        trackPlayer.playMusic(musicItem);
+                                        trackPlayer.playMusic(rawItem);
                                     }}
                                     onContextMenu={(e) => {
                                         if (
@@ -161,7 +174,7 @@ export default function PlayList(props: IProps) {
                                             lastActiveIndexRef.current = virtualItem.rowIndex;
                                             setActiveItems(new Set([virtualItem.rowIndex]));
                                             showMusicContextMenu(
-                                                musicItem,
+                                                rawItem,
                                                 e.clientX,
                                                 e.clientY,
                                                 "play-list",

@@ -12,6 +12,7 @@ import trackPlayer from "@renderer/core/track-player";
 import MusicSheet from "@/renderer/core/music-sheet";
 import { hideModal } from "../..";
 import { getMediaPrimaryKey } from "@/common/media-util";
+import { applyMusicMeta } from "@/renderer/core/music-meta";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
@@ -31,6 +32,11 @@ function formatDuration(duration?: number | null) {
 export default function MusicAlternatives(props: IProps) {
     const { musicItem, sheetType } = props;
     const { t } = useTranslation();
+    /** 展示用：套用用户手动改过的信息，插件调用仍用原始条目 */
+    const displayItem = useMemo(
+        () => (musicItem ? applyMusicMeta(musicItem) : null),
+        [musicItem?.platform, musicItem?.id],
+    );
 
     /**
      * 用完整版覆盖原来的不完整版本：所在本地歌单与播放队列都替换，
@@ -134,7 +140,7 @@ export default function MusicAlternatives(props: IProps) {
                     </div>
                 </Base.Header>
                 <div className="alternatives-subtitle">
-                    {musicItem?.title} - {musicItem?.artist}
+                    {displayItem?.title} - {displayItem?.artist}
                 </div>
                 <div className="alternatives-body">
                     {loading ? (

@@ -12,10 +12,18 @@ import { useCurrentMusic, useProgress } from "@renderer/core/track-player/hooks"
 import { hidePanel, showPanel } from "@renderer/components/Panel";
 import MusicDownloaded from "@renderer/components/MusicDownloaded";
 import PluginManager from "@shared/plugin-manager/renderer";
+import { useMemo } from "react";
+import { applyMusicMeta, useMusicMeta } from "@/renderer/core/music-meta";
 
 export default function MusicInfo() {
     const musicItem = useCurrentMusic();
     const musicDetailShown = useMusicDetailShown();
+    const musicMeta = useMusicMeta();
+    /** 展示用：套用用户手动改过的信息 */
+    const displayItem = useMemo(
+        () => (musicItem ? applyMusicMeta(musicItem) : null),
+        [musicItem, musicMeta],
+    );
 
     const { t } = useTranslation();
 
@@ -57,7 +65,7 @@ export default function MusicInfo() {
                             <div className="music-info">
                                 <div className="music-title">
                                     <span role="button" onClick={toggleMusicDetail}
-                                        title={musicItem.title}>{musicItem.title}</span>
+                                        title={displayItem?.title}>{displayItem?.title}</span>
                                     <Tag
                                         fill
                                         style={{
@@ -68,7 +76,7 @@ export default function MusicInfo() {
                                     </Tag>
                                 </div>
                                 <div className="music-artist">
-                                    <div className="artist">{musicItem.artist}</div>
+                                    <div className="artist">{displayItem?.artist}</div>
                                     <Progress></Progress>
                                     <MusicFavorite musicItem={musicItem} size={18}></MusicFavorite>
                                 </div>

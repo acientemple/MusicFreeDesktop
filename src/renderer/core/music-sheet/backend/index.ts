@@ -8,6 +8,7 @@ import { localPluginName, musicRefSymbol, sortIndexSymbol, timeStampSymbol } fro
 import { nanoid } from "nanoid";
 import musicSheetDB from "../../db/music-sheet-db";
 import { produce } from "immer";
+import { applyMusicMetaToList } from "@/renderer/core/music-meta";
 import defaultSheet from "../common/default-sheet";
 import { getMediaPrimaryKey, isSameMedia } from "@/common/media-util";
 import { getUserPreferenceIDB, setUserPreferenceIDB } from "@/renderer/utils/user-perference";
@@ -592,7 +593,8 @@ export async function exportAllSheetDetails() {
 
             const allSheetDetails = produce(allSheets, (draft) => {
                 draft.forEach((sheet, index) => {
-                    sheet.musicList = musicLists[index];
+                    // 导出时带上用户手动改过的信息
+                    sheet.musicList = applyMusicMetaToList(musicLists[index]);
                 });
             });
 

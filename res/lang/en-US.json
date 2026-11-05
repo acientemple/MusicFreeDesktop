@@ -135,6 +135,7 @@
   "music_list_context_menu": {
     "next_play": "Play Next",
     "search_full_version": "Search Full-Playable Versions",
+    "edit_music_meta": "Edit Song Info",
     "add_to_my_sheets": "Add to Playlist",
     "remove_from_sheet": "Remove from Playlist",
     "delete_local_download": "Delete Local Download",
@@ -213,7 +214,8 @@
     "audio_recognition": "Recognize by Audio",
     "hide_translation": "Hide Translation",
     "watch_mv": "Watch MV",
-    "search_full_version": "Find Full Version"
+    "search_full_version": "Find Full Version",
+    "edit_music_meta": "Edit Song Info"
   },
   "bottom_loading_state": {
     "reached_end": "~~~ End ~~~",
@@ -274,6 +276,13 @@
     "music_alternatives_origin_tag": "Original Artist",
     "music_alternatives_replaced": "Replaced with the full version",
     "music_alternatives_replace_fail": "Replace failed: {{reason}}",
+    "edit_music_meta": "Edit Song Info",
+    "edit_music_meta_title_empty": "Title cannot be empty",
+    "edit_music_meta_saved": "Song info saved",
+    "edit_music_meta_save_fail": "Save failed: {{reason}}",
+    "edit_music_meta_reset": "Restore Default",
+    "edit_music_meta_reset_done": "Restored default song info",
+    "edit_music_meta_reset_fail": "Restore failed: {{reason}}",
     "new_version_found": "New Version Found",
     "latest_version": "Latest Version: ",
     "current_version": "Current Version: ",

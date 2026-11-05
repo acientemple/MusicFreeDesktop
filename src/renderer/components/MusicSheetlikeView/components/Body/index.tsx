@@ -11,6 +11,7 @@ import { offsetHeightStore } from "../../store";
 import MusicSheet from "@/renderer/core/music-sheet";
 import AppConfig from "@shared/app-config/renderer";
 import { useTranslation } from "react-i18next";
+import { applyMusicMeta, useMusicMeta } from "@/renderer/core/music-meta";
 
 interface IProps {
     musicSheet: IMusic.IMusicSheetItem;
@@ -28,6 +29,7 @@ export default function Body(props: IProps) {
     >(null);
     const [isPending, startTransition] = useTransition();
     const { t } = useTranslation();
+    const musicMeta = useMusicMeta();
 
     useEffect(() => {
         if (inputSearch.trim() === "") {
@@ -37,29 +39,28 @@ export default function Body(props: IProps) {
                 const caseSensitive = AppConfig.getConfig(
                     "playMusic.caseSensitiveInSearch",
                 );
-                if (caseSensitive) {
-                    setFilterMusicList(
-                        musicList.filter(
-                            (item) =>
-                                item.title?.includes(inputSearch) ||
-                item.artist?.includes(inputSearch) ||
-                item.album?.includes(inputSearch),
-                        ),
-                    );
-                } else {
-                    const searchText = inputSearch.toLocaleLowerCase();
-                    setFilterMusicList(
-                        musicList.filter(
-                            (item) =>
-                                item.title?.toLocaleLowerCase()?.includes(searchText) ||
-                item.artist?.toLocaleLowerCase()?.includes(searchText) ||
-                item.album?.toLocaleLowerCase()?.includes(searchText),
-                        ),
-                    );
-                }
+                const searchText = inputSearch.toLocaleLowerCase();
+                // 匹配的是用户改过的信息，但留在列表里的仍是原始条目
+                setFilterMusicList(
+                    musicList.filter((item) => {
+                        const effective = applyMusicMeta(item);
+                        if (caseSensitive) {
+                            return (
+                                effective.title?.includes(inputSearch) ||
+                                effective.artist?.includes(inputSearch) ||
+                                effective.album?.includes(inputSearch)
+                            );
+                        }
+                        return (
+                            effective.title?.toLocaleLowerCase()?.includes(searchText) ||
+                            effective.artist?.toLocaleLowerCase()?.includes(searchText) ||
+                            effective.album?.toLocaleLowerCase()?.includes(searchText)
+                        );
+                    }),
+                );
             });
         }
-    }, [inputSearch]);
+    }, [inputSearch, musicMeta]);
 
     useEffect(() => {
         setInputSearch("");

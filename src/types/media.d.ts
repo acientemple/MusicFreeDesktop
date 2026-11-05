@@ -56,6 +56,18 @@ declare namespace IMusic {
     [k: string | number | symbol]: any;
   }
 
+  /** 用户手动改过的歌曲信息，只存被改过的字段 */
+  interface IMusicMetaItem {
+    platform: string;
+    id: string;
+    /** 歌曲标题 */
+    title?: string;
+    /** 作者 */
+    artist?: string;
+    /** 专辑名 */
+    album?: string;
+  }
+
   // 音乐的内部数据
   interface IMusicItemInternalData {
     downloadData?: {

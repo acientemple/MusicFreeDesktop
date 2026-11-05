@@ -17,6 +17,7 @@ import throttle from "lodash.throttle";
 import { IAppState } from "@shared/message-bus/type";
 import MusicDetail from "@renderer/components/MusicDetail";
 import shortCut from "@shared/short-cut/renderer";
+import { setupMusicMeta } from "@renderer/core/music-meta";
 
 
 setAutoFreeze(false);
@@ -29,6 +30,7 @@ export default async function () {
     await Promise.all([
         MusicSheet.frontend.setupMusicSheets(),
         trackPlayer.setup(),
+        setupMusicMeta(),
     ]);
     await setupI18n();
     shortCut.setup();

@@ -8,11 +8,13 @@ import Lyric from "./widgets/Lyric";
 import Condition from "../Condition";
 import { useTranslation } from "react-i18next";
 import { useCurrentMusic } from "@renderer/core/track-player/hooks";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { musicDetailShownStore } from "@renderer/components/MusicDetail/store";
 import { showModal } from "@renderer/components/Modal";
 import { useSupportedPlugin } from "@shared/plugin-manager/renderer";
 import SvgAsset from "@renderer/components/SvgAsset";
+import { applyMusicMeta, useMusicMeta } from "@renderer/core/music-meta";
+import isLocalMusic from "@renderer/utils/is-local-music";
 
 export const isMusicDetailShown = musicDetailShownStore.getValue;
 export const useMusicDetailShown = musicDetailShownStore.useValue;
@@ -20,6 +22,12 @@ export const useMusicDetailShown = musicDetailShownStore.useValue;
 function MusicDetail() {
     const musicItem = useCurrentMusic();
     const musicDetailShown = musicDetailShownStore.useValue();
+    const musicMeta = useMusicMeta();
+    /** 展示用：套用用户手动改过的信息，插件调用仍用原始条目 */
+    const displayItem = useMemo(
+        () => (musicItem ? applyMusicMeta(musicItem) : null),
+        [musicItem, musicMeta],
+    );
 
     const { t } = useTranslation();
 
@@ -31,6 +39,9 @@ function MusicDetail() {
     // 找完整播放版本不挑来源，任何支持该方法的插件都能给候选
     const alternativePlugins = useSupportedPlugin("getMusicAlternatives");
     const canSearchFullVersion = !!musicItem && alternativePlugins.length > 0;
+
+    // 本地音乐的信息来自文件标签，不支持改
+    const canEditMeta = !!musicItem && !isLocalMusic(musicItem);
 
     useEffect(() => {
         const escHandler = (evt: KeyboardEvent) => {
@@ -70,17 +81,17 @@ function MusicDetail() {
                 }}
             ></div>
             <Header></Header>
-            <div className="music-title" title={musicItem?.title}>
-                {musicItem?.title || t("media.unknown_title")}
+            <div className="music-title" title={displayItem?.title}>
+                {displayItem?.title || t("media.unknown_title")}
             </div>
             <div className="music-info">
                 <span>
-                    <Condition condition={musicItem?.artist}>
-                        {musicItem?.artist}
+                    <Condition condition={displayItem?.artist}>
+                        {displayItem?.artist}
                     </Condition>
-                    <Condition condition={musicItem?.album}>
+                    <Condition condition={displayItem?.album}>
                         {" "}
-                        - {musicItem?.album}
+                        - {displayItem?.album}
                     </Condition>
                 </span>
                 {musicItem?.platform ? <Tag fill>{musicItem.platform}</Tag> : null}
@@ -92,7 +103,7 @@ function MusicDetail() {
                         onError={setFallbackAlbum}
                         src={musicItem?.artwork ?? albumImg}
                     ></img>
-                    {canWatchMv || canSearchFullVersion ? (
+                    {canWatchMv || canSearchFullVersion || canEditMeta ? (
                         <div className="music-options">
                             {canWatchMv ? (
                                 <div
@@ -118,6 +129,19 @@ function MusicDetail() {
                                 >
                                     <SvgAsset iconName="magnifying-glass"></SvgAsset>
                                     <span>{t("music_detail.search_full_version")}</span>
+                                </div>
+                            ) : null}
+                            {canEditMeta ? (
+                                <div
+                                    className="music-option-button"
+                                    role="button"
+                                    title={t("music_detail.edit_music_meta")}
+                                    onClick={() => {
+                                        showModal("EditMusicMeta", { musicItem });
+                                    }}
+                                >
+                                    <SvgAsset iconName="pencil-square"></SvgAsset>
+                                    <span>{t("music_detail.edit_music_meta")}</span>
                                 </div>
                             ) : null}
                         </div>

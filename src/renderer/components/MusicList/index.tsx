@@ -21,7 +21,7 @@ import { localPluginName, RequestStateCode } from "@/common/constant";
 import BottomLoadingState from "../BottomLoadingState";
 import { IContextMenuItem, showContextMenu } from "../ContextMenu";
 import { getInternalData, getMediaPrimaryKey, isSameMedia } from "@/common/media-util";
-import { CSSProperties, memo, useCallback, useEffect, useRef, useState } from "react";
+import { CSSProperties, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { showModal } from "../Modal";
 import useVirtualList from "@/hooks/useVirtualList";
 import hotkeys from "hotkeys-js";
@@ -35,6 +35,11 @@ import { i18n } from "@/shared/i18n/renderer";
 import isLocalMusic from "@/renderer/utils/is-local-music";
 import AppConfig from "@shared/app-config/renderer";
 import { shellUtil } from "@shared/utils/renderer";
+import {
+    applyMusicMeta,
+    applyMusicMetaToList,
+    useMusicMeta,
+} from "@/renderer/core/music-meta";
 
 interface IMusicListProps {
     /** 展示的播放列表 */
@@ -153,6 +158,8 @@ export function showMusicContextMenu(
     const menuItems: IContextMenuItem[] = [];
     const isArray = Array.isArray(musicItems);
     if (!isArray) {
+        // 菜单里展示的是用户改过的信息，实际操作用原始条目
+        const displayItem = applyMusicMeta(musicItems);
         menuItems.push(
             {
                 title: `ID: ${getMediaPrimaryKey(musicItems)}`,
@@ -160,16 +167,16 @@ export function showMusicContextMenu(
             },
             {
                 title: `${i18n.t("media.media_type_artist")}: ${
-                    musicItems.artist ?? i18n.t("media.unknown_artist")
+                    displayItem.artist ?? i18n.t("media.unknown_artist")
                 }`,
                 icon: "user",
             },
             {
                 title: `${i18n.t("media.media_type_album")}: ${
-                    musicItems.album ?? i18n.t("media.unknown_album")
+                    displayItem.album ?? i18n.t("media.unknown_album")
                 }`,
                 icon: "album",
-                show: !!musicItems.album,
+                show: !!displayItem.album,
             },
             {
                 divider: true,
@@ -182,6 +189,16 @@ export function showMusicContextMenu(
             icon: "motion-play",
             onClick() {
                 trackPlayer.addNext(musicItems);
+            },
+        },
+        {
+            title: i18n.t("music_list_context_menu.edit_music_meta"),
+            icon: "pencil-square",
+            show: !isArray && !isLocalMusic(musicItems),
+            onClick() {
+                showModal("EditMusicMeta", {
+                    musicItem: musicItems as IMusic.IMusicItem,
+                });
             },
         },
         {
@@ -335,6 +352,12 @@ function _MusicList(props: IMusicListProps) {
     } = props;
 
     const [sorting, setSorting] = useState<SortingState>([]);
+    const musicMeta = useMusicMeta();
+    /** 展示用列表：套用用户手动改过的信息，播放时仍用原始条目 */
+    const displayList = useMemo(
+        () => applyMusicMetaToList(musicList),
+        [musicList, musicMeta],
+    );
 
     const musicListRef = useRef(musicList);
     const columnShownRef = useRef(
@@ -349,7 +372,7 @@ function _MusicList(props: IMusicListProps) {
 
     const table = useReactTable({
         debugAll: false,
-        data: musicList,
+        data: displayList,
         columns: columnDef,
         state: {
             sorting: sorting,
@@ -510,7 +533,10 @@ function _MusicList(props: IMusicListProps) {
                                         const selectedItems: IMusic.IMusicItem[] = [];
                                         const rows = table.getRowModel().rows;
                                         activeItems.forEach(item => {
-                                            selectedItems.push(rows[item].original);
+                                            selectedItems.push(
+                                                musicList[rows[item].index] ??
+                                                    rows[item].original,
+                                            );
                                         });
 
                                         showMusicContextMenu(
@@ -525,7 +551,7 @@ function _MusicList(props: IMusicListProps) {
                                         lastActiveIndexRef.current = virtualItem.rowIndex;
                                         setActiveItems(new Set([virtualItem.rowIndex]));
                                         showMusicContextMenu(
-                                            row.original,
+                                            musicList[row.index] ?? row.original,
                                             e.clientX,
                                             e.clientY,
                                             musicSheet?.platform === localPluginName
@@ -570,13 +596,16 @@ function _MusicList(props: IMusicListProps) {
                                     const config =
                                     doubleClickBehavior ??
                                     AppConfig.getConfig("playMusic.clickMusicList");
+                                    const rawItem = musicList[row.index] ?? row.original;
                                     if (config === "replace") {
                                         trackPlayer.playMusicWithReplaceQueue(
-                                            table.getRowModel().rows.map((it) => it.original),
-                                            row.original,
+                                            table.getRowModel().rows.map(
+                                                (it) => musicList[it.index] ?? it.original,
+                                            ),
+                                            rawItem,
                                         );
                                     } else {
-                                        trackPlayer.playMusic(row.original);
+                                        trackPlayer.playMusic(rawItem);
                                     }
                                 }}
                                 draggable={enableDrag}

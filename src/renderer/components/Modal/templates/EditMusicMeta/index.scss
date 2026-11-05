@@ -1,0 +1,67 @@
+.modal--edit-music-meta-container {
+  width: 420px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+
+  & .header-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  & .edit-music-meta-body {
+    padding: 20px 24px 4px;
+
+    & .edit-music-meta-item {
+      margin-bottom: 16px;
+
+      & .label {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 6px;
+      }
+
+      & input {
+        width: 100%;
+      }
+    }
+  }
+
+  & .edit-music-meta-operation {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 8px 24px 20px;
+
+    & .reset-button,
+    & .cancel-button {
+      font-size: 1em;
+      padding: 0.6em 1em;
+      border-radius: 8px;
+      color: var(--textColor);
+      border: 1px solid currentColor;
+      width: fit-content;
+      line-height: 1em;
+      background-color: color-mix(in srgb, currentColor 8%, transparent);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      &:hover {
+        background-color: color-mix(in srgb, currentColor 15%, transparent);
+      }
+    }
+
+    & .reset-button {
+      margin-right: auto;
+      color: var(--dangerColor);
+      border-color: var(--dangerColor);
+      background-color: color-mix(in srgb, var(--dangerColor) 8%, transparent);
+
+      &:hover {
+        background-color: color-mix(in srgb, var(--dangerColor) 15%, transparent);
+      }
+    }
+  }
+}

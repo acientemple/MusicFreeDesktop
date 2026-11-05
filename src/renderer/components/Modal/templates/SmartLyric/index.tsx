@@ -19,6 +19,7 @@ import {
 import { ISmartLyricCandidate } from "@renderer/core/smart-lyric";
 import trackPlayer from "@renderer/core/track-player";
 import { hideModal } from "../..";
+import { applyMusicMeta } from "@/renderer/core/music-meta";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
@@ -105,7 +106,7 @@ export default function SmartLyric(props: IProps) {
                     <div className="header-title">
                         {t("modal.smart_lyric")}
                         <span className="header-subtitle">
-                            {musicItem?.title ?? ""}
+                            {musicItem ? applyMusicMeta(musicItem).title : ""}
                         </span>
                     </div>
                 </Base.Header>

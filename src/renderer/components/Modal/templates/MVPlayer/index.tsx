@@ -6,6 +6,7 @@ import PluginManager from "@shared/plugin-manager/renderer";
 import ServiceManager from "@shared/service-manager/renderer";
 import trackPlayer from "@renderer/core/track-player";
 import { useTranslation } from "react-i18next";
+import { applyMusicMeta } from "@/renderer/core/music-meta";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
@@ -96,7 +97,9 @@ export default function MVPlayer(props: IProps) {
             <div className="modal--mv-player-container shadow backdrop-color">
                 <Base.Header>
                     <div className="header-title">
-                        {musicItem?.title ?? t("modal.mv_player")}
+                        {musicItem
+                            ? applyMusicMeta(musicItem).title
+                            : t("modal.mv_player")}
                     </div>
                 </Base.Header>
                 <div className="mv-player-body">

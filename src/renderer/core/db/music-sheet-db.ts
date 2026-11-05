@@ -13,6 +13,8 @@ class MusicSheetDB extends Dexie {
     localMusicStore: Table<IMusic.IMusicItem & {
         $$localPath: string; // 本地地址
     }>;
+    /** 用户手动改过的歌曲信息，只存被改过的字段 */
+    musicMeta: Table<IMusic.IMusicMetaItem>;
 
     constructor() {
         super("musicSheetDB");
@@ -21,6 +23,14 @@ class MusicSheetDB extends Dexie {
             musicStore: "[platform+id], title, artist, album",
             /** 本地音乐 */
             localMusicStore: "[platform+id], title, artist, album, $$localPath",
+        });
+        this.version(1.2).stores({
+            sheets: "&id, title, artist, createAt, $$sortIndex",
+            musicStore: "[platform+id], title, artist, album",
+            /** 本地音乐 */
+            localMusicStore: "[platform+id], title, artist, album, $$localPath",
+            /** 歌曲信息覆盖 */
+            musicMeta: "[platform+id]",
         });
     }
 }

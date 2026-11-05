@@ -2,6 +2,7 @@ import AddMusicToSheet from "./AddMusicToSheet";
 import AddNewSheet from "./AddNewSheet";
 import AudioRecognition from "./AudioRecognition";
 import Base from "./Base";
+import EditMusicMeta from "./EditMusicMeta";
 import ExitConfirm from "./ExitConfirm";
 import ImportMusicSheet from "./ImportMusicSheet";
 import MusicAlternatives from "./MusicAlternatives";
@@ -34,4 +35,5 @@ export default {
     ImportMusicSheet,
     MVPlayer,
     MusicAlternatives,
+    EditMusicMeta,
 };
