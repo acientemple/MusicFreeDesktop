@@ -34,6 +34,7 @@ import DragReceiver, { startDrag } from "../DragReceiver";
 import { i18n } from "@/shared/i18n/renderer";
 import isLocalMusic from "@/renderer/utils/is-local-music";
 import AppConfig from "@shared/app-config/renderer";
+import PluginManager from "@shared/plugin-manager/renderer";
 import { shellUtil } from "@shared/utils/renderer";
 import {
     applyMusicMeta,
@@ -141,7 +142,9 @@ const columnDef: ColumnDef<IMusic.IMusicItem>[] = [
         size: 100,
         minSize: 80,
         maxSize: 300,
-        cell: (info) => <Tag fill>{info.getValue()}</Tag>,
+        cell: (info) => (
+            <Tag fill>{PluginManager.getPluginDisplayName(info.getValue())}</Tag>
+        ),
         // @ts-ignore
         fr: 1,
     }),

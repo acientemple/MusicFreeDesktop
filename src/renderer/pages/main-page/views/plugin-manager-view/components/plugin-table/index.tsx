@@ -200,12 +200,16 @@ const columnDef = [
         maxSize: 64,
         size: 64,
     }),
-    columnHelper.accessor("platform", {
-        cell: (info) => info.getValue(),
-        header: () => t("media.media_platform"),
-        minSize: 150,
-        size: 200,
-    }),
+    columnHelper.accessor(
+        (row) => row.displayName ?? row.platform,
+        {
+            id: "platform",
+            cell: (info) => info.getValue(),
+            header: () => t("media.media_platform"),
+            minSize: 150,
+            size: 200,
+        },
+    ),
     columnHelper.accessor("version", {
         cell: (info) => info.getValue(),
         header: () => t("common.version_code"),

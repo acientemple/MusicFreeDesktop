@@ -42,7 +42,8 @@ export default function (props: IUserVariablesProps) {
                     </div>
                 }
             >
-                {plugin.platform ?? ""} {t("panel.user_variable")}
+                {plugin.displayName ?? plugin.platform ?? ""}{" "}
+                {t("panel.user_variable")}
             </Base.Header>
             <div className="panel--user-variables-container">
                 {variables.map((variable) => (

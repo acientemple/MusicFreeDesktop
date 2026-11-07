@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useCurrentMusic, useProgress } from "@renderer/core/track-player/hooks";
 import { hidePanel, showPanel } from "@renderer/components/Panel";
 import MusicDownloaded from "@renderer/components/MusicDownloaded";
-import PluginManager from "@shared/plugin-manager/renderer";
+import PluginManager, { usePluginDisplayName } from "@shared/plugin-manager/renderer";
 import { useMemo } from "react";
 import { applyMusicMeta, useMusicMeta } from "@/renderer/core/music-meta";
 
@@ -26,6 +26,8 @@ export default function MusicInfo() {
     );
 
     const { t } = useTranslation();
+
+    const platformDisplayName = usePluginDisplayName(musicItem?.platform);
 
     function toggleMusicDetail() {
         if (musicDetailShown) {
@@ -72,7 +74,7 @@ export default function MusicInfo() {
                                             fontSize: "0.9rem",
                                         }}
                                     >
-                                        {musicItem.platform}
+                                        {platformDisplayName}
                                     </Tag>
                                 </div>
                                 <div className="music-artist">

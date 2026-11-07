@@ -47,7 +47,7 @@ export default function ToplistView() {
                     <Tab.List className="tab-list-container">
                         {availablePlugins.map((plugin) => (
                             <Tab key={plugin.hash} as="div" className="tab-list-item">
-                                {plugin.platform}
+                                {plugin.displayName ?? plugin.platform}
                             </Tab>
                         ))}
                     </Tab.List>

@@ -56,7 +56,7 @@ export default function SearchResult(props: ISearchResultProps) {
                         }}
                         data-selected={selectedPlugin?.hash === plugin.hash}
                     >
-                        {plugin.platform}
+                        {plugin.displayName ?? plugin.platform}
                     </div>
                 ))}
             </div>

@@ -184,6 +184,13 @@ export default function MusicVideoSearch(props: IProps) {
                                         </div>
                                     </div>
                                     <div className="video-tags">
+                                        {item.isOfficialMv ? (
+                                            <div className="official-tag">
+                                                {t(
+                                                    "modal.music_video_search_official",
+                                                )}
+                                            </div>
+                                        ) : null}
                                         {isBound ? (
                                             <div className="in-use-tag">
                                                 {t(
@@ -192,7 +199,9 @@ export default function MusicVideoSearch(props: IProps) {
                                             </div>
                                         ) : null}
                                         <div className="source-tag">
-                                            {item.platform}
+                                            {PluginManager.getPluginDisplayName(
+                                                item.platform,
+                                            )}
                                         </div>
                                         {duration ? (
                                             <div className="duration">{duration}</div>

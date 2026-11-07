@@ -4,6 +4,7 @@ import Tag from "@/renderer/components/Tag";
 import Condition from "@/renderer/components/Condition";
 import "./index.scss";
 import { useTranslation } from "react-i18next";
+import { usePluginDisplayName } from "@shared/plugin-manager/renderer";
 
 interface IProps {
     artistItem: IArtist.IArtistItem;
@@ -12,6 +13,7 @@ interface IProps {
 export default function Header(props: IProps) {
     const { artistItem } = props;
     const { t } = useTranslation();
+    const platformDisplayName = usePluginDisplayName(artistItem?.platform);
 
     return (
         <div className="artist-view--header-container">
@@ -22,7 +24,7 @@ export default function Header(props: IProps) {
             ></img>
             <div className="artist-info">
                 <div className="title-container">
-                    <Tag>{artistItem?.platform}</Tag>
+                    <Tag>{platformDisplayName}</Tag>
                     <div className="title">
                         {artistItem?.name ?? t("media.unknown_artist")}
                     </div>

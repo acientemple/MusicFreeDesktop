@@ -172,6 +172,11 @@ export default function MusicAlternatives(props: IProps) {
                                         </div>
                                     </div>
                                     <div className="alternative-tags">
+                                        <div className="source-tag">
+                                            {PluginManager.getPluginDisplayName(
+                                                item.platform,
+                                            )}
+                                        </div>
                                         {item.isOriginArtist ? (
                                             <div className="origin-tag">
                                                 {t(

@@ -20,6 +20,7 @@ import {
     applyMusicMetaToList,
     useMusicMeta,
 } from "@/renderer/core/music-meta";
+import { usePluginDisplayName } from "@shared/plugin-manager/renderer";
 
 const estimateItemHeight = 2.6 * rem;
 const DRAG_TAG = "Playlist";
@@ -256,6 +257,7 @@ interface IPlayListMusicItemProps {
 
 function _PlayListMusicItem(props: IPlayListMusicItemProps) {
     const { isPlaying, musicItem, isActive } = props;
+    const platformDisplayName = usePluginDisplayName(musicItem?.platform);
 
     if (!musicItem) {
         return null;
@@ -285,7 +287,7 @@ function _PlayListMusicItem(props: IPlayListMusicItemProps) {
                         width: "initial",
                     }}
                 >
-                    {musicItem?.platform}
+                    {platformDisplayName}
                 </Tag>
             </div>
             <div

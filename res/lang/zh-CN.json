@@ -270,6 +270,7 @@
     "music_video_search_unsupported": "没有插件支持搜索 MV",
     "music_video_search_play_failed": "该 MV 暂无可用视频源",
     "music_video_search_in_use": "正在使用",
+    "music_video_search_official": "官方MV",
     "music_video_search_clear": "取消使用",
     "edit_music_meta": "编辑歌曲信息",
     "edit_music_meta_title_empty": "标题不能为空",

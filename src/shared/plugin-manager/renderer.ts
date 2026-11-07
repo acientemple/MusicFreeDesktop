@@ -84,6 +84,22 @@ function getPluginByHash(hash: string) {
     return delegatePluginsStore.getValue().find((item) => item.hash === hash);
 }
 
+/**
+ * platform 是数据键，改名会让历史条目与用户变量配置失效，
+ * 所以显示名单独放在 displayName 上，这里做一次映射。
+ */
+function getPluginDisplayName(platform?: string) {
+    if (!platform) {
+        return platform;
+    }
+    return (
+        delegatePluginsStore
+            .getValue()
+            .find((item) => item.platform === platform)?.displayName ||
+        platform
+    );
+}
+
 function getPluginByPlatform(platform: string) {
     return delegatePluginsStore.getValue().find((item) => item.platform === platform);
 }
@@ -117,6 +133,7 @@ const PluginManager = {
     getSortedSearchablePlugins,
     getPluginByHash,
     getPluginByPlatform,
+    getPluginDisplayName,
     isSupportFeatureMethod,
     getPluginPrimaryKey,
     callPluginDelegateMethod: mod.callPluginMethod,
@@ -165,4 +182,18 @@ export function useSortedPlugins() {
                 : 1;
         });
     }, [plugins, meta]);
+}
+
+/** 条目上的 platform 是数据键，展示时映射成插件的显示名 */
+export function usePluginDisplayName(platform?: string) {
+    const plugins = delegatePluginsStore.useValue();
+    return useMemo(() => {
+        if (!platform) {
+            return platform;
+        }
+        return (
+            plugins.find((item) => item.platform === platform)?.displayName ||
+            platform
+        );
+    }, [plugins, platform]);
 }

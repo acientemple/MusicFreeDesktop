@@ -94,6 +94,8 @@ declare namespace IPlugin {
   interface IPluginDefine {
     /** 来源名 */
     platform: string;
+    /** 显示名，只影响界面展示；不填则用 platform */
+    displayName?: string;
     /** 匹配的版本号 */
     appVersion?: string;
     /** 插件版本 */

@@ -11,7 +11,7 @@ import { useCurrentMusic } from "@renderer/core/track-player/hooks";
 import { useEffect, useMemo } from "react";
 import { musicDetailShownStore } from "@renderer/components/MusicDetail/store";
 import { showModal } from "@renderer/components/Modal";
-import { useSupportedPlugin } from "@shared/plugin-manager/renderer";
+import { useSupportedPlugin, usePluginDisplayName } from "@shared/plugin-manager/renderer";
 import SvgAsset from "@renderer/components/SvgAsset";
 import { applyMusicMeta, useMusicMeta } from "@renderer/core/music-meta";
 import { useMusicMv } from "@renderer/core/music-mv";
@@ -51,6 +51,8 @@ function MusicDetail() {
 
     // 本地音乐的信息来自文件标签，不支持改
     const canEditMeta = !!musicItem && !isLocalMusic(musicItem);
+
+    const platformDisplayName = usePluginDisplayName(musicItem?.platform);
 
     useEffect(() => {
         const escHandler = (evt: KeyboardEvent) => {
@@ -103,7 +105,9 @@ function MusicDetail() {
                         - {displayItem?.album}
                     </Condition>
                 </span>
-                {musicItem?.platform ? <Tag fill>{musicItem.platform}</Tag> : null}
+                {musicItem?.platform ? (
+                    <Tag fill>{platformDisplayName}</Tag>
+                ) : null}
             </div>
             <div className="music-body">
                 <div className="music-album-options">

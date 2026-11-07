@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import "./index.scss";
 import { i18n } from "@/shared/i18n/renderer";
+import PluginManager from "@shared/plugin-manager/renderer";
 import useVirtualList from "@/hooks/useVirtualList";
 import DownloadStatus from "./DownloadStatus";
 
@@ -52,7 +53,9 @@ const columnDef = [
     columnHelper.accessor("platform", {
         header: () => t("media.media_platform"),
         size: 100,
-        cell: (info) => <Tag fill>{info.getValue()}</Tag>,
+        cell: (info) => (
+            <Tag fill>{PluginManager.getPluginDisplayName(info.getValue())}</Tag>
+        ),
     }),
 ];
 

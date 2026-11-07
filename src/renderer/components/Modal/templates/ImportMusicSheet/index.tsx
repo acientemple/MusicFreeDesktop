@@ -64,7 +64,7 @@ export default function ImportMusicSheet(props: IProps) {
                                     });
                                 }}
                             >
-                                {it.platform}
+                                {it.displayName ?? it.platform}
                             </div>
                         ))}</> : <NoPlugin supportMethod={t("plugin.method_import_music_sheet")}></NoPlugin>
                     }

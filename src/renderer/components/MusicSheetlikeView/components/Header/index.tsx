@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import trackPlayer from "@renderer/core/track-player";
 import SvgAsset from "@renderer/components/SvgAsset";
 import { showModal } from "@renderer/components/Modal";
+import { usePluginDisplayName } from "@shared/plugin-manager/renderer";
 
 interface IProps {
     musicSheet: IMusic.IMusicSheetItem;
@@ -20,6 +21,7 @@ export default function Header(props: IProps) {
     const { musicSheet, musicList, hidePlatform } = props;
     const containerRef = useRef<HTMLDivElement>();
     const { t } = useTranslation();
+    const platformDisplayName = usePluginDisplayName(musicSheet?.platform);
 
     return (
         <div className="music-sheetlike-view--header-container" ref={containerRef}>
@@ -31,7 +33,7 @@ export default function Header(props: IProps) {
             <div className="sheet-info-container">
                 <div className="title-container">
                     {(musicSheet?.platform && !hidePlatform) ? (
-                        <Tag>{musicSheet?.platform}</Tag>
+                        <Tag>{platformDisplayName}</Tag>
                     ) : null}
 
                     <div className="title">
