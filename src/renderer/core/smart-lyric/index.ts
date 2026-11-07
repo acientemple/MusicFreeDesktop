@@ -41,7 +41,7 @@ interface ILyricSearchTarget {
 const maxCandidateCount = 60;
 
 /** 最多检查多少个候选是否真的有歌词 */
-export const maxLyricCheckCount = 12;
+export const maxLyricCheckCount = 16;
 
 /** 最多用几个搜索词 */
 const maxSearchQueryCount = 5;
@@ -56,7 +56,7 @@ const searchRetryInterval = 2000;
 const pluginLimitedDuration = 20000;
 
 /** 最多翻几页。原作常被翻唱版本挤到第二页，但请求多了会被风控 */
-const maxSecondPageCount = 2;
+const maxSecondPageCount = 3;
 
 /** 达到这个得分就算找到了合适的候选 */
 const defaultGoodScore = 0.8;

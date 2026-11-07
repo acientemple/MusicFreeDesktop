@@ -9,24 +9,21 @@ import ServiceManager from "@shared/service-manager/renderer";
 import trackPlayer from "@renderer/core/track-player";
 import { useTranslation } from "react-i18next";
 import { applyMusicMeta } from "@/renderer/core/music-meta";
-
-interface IProps {
-    musicItem?: IMusic.IMusicItem;
-    /** 画面来源；搜索 MV 时与音频不是同一条 */
-    videoItem?: IMusic.IMusicItem;
-    quality?: IMusic.IQualityKey;
-}
+import SvgAsset from "@/renderer/components/SvgAsset";
+import { hideMVPlayer, useMVPlayerState } from "./store";
 
 /** 画面与音频允许的偏差，超过就重新对齐 */
 const MAX_DRIFT = 0.4;
 
-export default function MVPlayer(props: IProps) {
-    const { musicItem, videoItem, quality = "standard" } = props;
+export default function MVPlayer() {
+    const { visible, musicItem, videoItem, quality = "standard" } =
+        useMVPlayerState();
     const { t } = useTranslation();
 
     const [videoUrl, setVideoUrl] = useState("");
     const [error, setError] = useState<{ key?: string; message?: string }>(null);
     const [maximized, setMaximized] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const windowRef = useRef<IDraggableWindowHandle>(null);
 
@@ -35,6 +32,8 @@ export default function MVPlayer(props: IProps) {
 
     useEffect(() => {
         let canceled = false;
+        setVideoUrl("");
+        setError(null);
         (async () => {
             try {
                 const source = await PluginManager.callPluginDelegateMethod(
@@ -105,59 +104,123 @@ export default function MVPlayer(props: IProps) {
         }
     }, [musicItem]);
 
+    // 收起时画面停掉省 CPU，声音是播放器在放，不受影响
+    useEffect(() => {
+        if (collapsed) {
+            videoRef.current?.pause();
+            return;
+        }
+        const video = videoRef.current;
+        if (!video || !videoUrl) {
+            return;
+        }
+        video.play().catch(() => undefined);
+        const audioTime = trackPlayer.progress.currentTime;
+        if (isFinite(audioTime) && audioTime > 0) {
+            video.currentTime = audioTime;
+        }
+    }, [collapsed, videoUrl]);
+
+    if (!visible) {
+        return null;
+    }
+
     return (
-        <Base withBlur={false}>
-            <DraggableWindow
-                ref={windowRef}
-                className="modal--mv-player-container shadow backdrop-color"
-                defaultWidth={880}
-                defaultHeight={580}
-                minWidth={420}
-                minHeight={300}
-                onMaximizeChange={setMaximized}
-            >
-                <Base.Header>
-                    <div className="header-title">
-                        {musicItem
-                            ? applyMusicMeta(musicItem).title
-                            : t("modal.mv_player")}
-                    </div>
-                </Base.Header>
-                <div className="mv-player-body">
-                    {videoUrl ? (
-                        <video
-                            ref={videoRef}
-                            className="mv-player-video"
-                            src={videoUrl}
-                            autoPlay
-                            muted
-                            playsInline
-                            onLoadedMetadata={() => {
-                                const video = videoRef.current;
-                                const audioTime = trackPlayer.progress.currentTime;
-                                if (video && isFinite(audioTime) && audioTime > 0) {
-                                    video.currentTime = audioTime;
-                                }
+        <DraggableWindow
+            ref={windowRef}
+            className="modal--mv-player-container shadow backdrop-color"
+            defaultWidth={880}
+            defaultHeight={580}
+            minWidth={420}
+            minHeight={300}
+            onMaximizeChange={setMaximized}
+            onCollapsedChange={setCollapsed}
+        >
+            <Base.Header
+                onClose={hideMVPlayer}
+                extra={
+                    <div className="mv-player-header-actions">
+                        <div
+                            className="mv-player-btn"
+                            role="button"
+                            title={t(
+                                maximized
+                                    ? "modal.mv_player_restore"
+                                    : "modal.mv_player_maximize",
+                            )}
+                            onClick={() => {
+                                windowRef.current?.toggleMaximize();
                             }}
-                        ></video>
-                    ) : error ? (
-                        <div className="mv-player-error">
-                            {error.key ? t(error.key) : error.message}
+                        >
+                            <SvgAsset
+                                iconName={
+                                    maximized
+                                        ? "arrows-pointing-in"
+                                        : "arrows-pointing-out"
+                                }
+                            ></SvgAsset>
                         </div>
-                    ) : (
-                        <Loading></Loading>
-                    )}
+                        <div
+                            className="mv-player-btn"
+                            role="button"
+                            title={t(
+                                collapsed
+                                    ? "modal.mv_player_expand"
+                                    : "modal.mv_player_minimize",
+                            )}
+                            onClick={() => {
+                                windowRef.current?.toggleCollapsed();
+                            }}
+                        >
+                            <SvgAsset
+                                iconName={
+                                    collapsed ? "chevron-double-up" : "minus"
+                                }
+                            ></SvgAsset>
+                        </div>
+                    </div>
+                }
+            >
+                <div className="header-title">
+                    {musicItem
+                        ? applyMusicMeta(musicItem).title
+                        : t("modal.mv_player")}
                 </div>
-                <PlayerControl
-                    videoRef={videoRef}
-                    videoItem={visualItem}
-                    quality={quality}
-                    onToggleMaximize={() => {
-                        windowRef.current?.toggleMaximize();
-                    }}
-                    isMaximized={maximized}
-                ></PlayerControl>
-            </DraggableWindow>
-        </Base>
+            </Base.Header>
+            <div
+                className="mv-player-body"
+                style={{ display: collapsed ? "none" : "flex" }}
+            >
+                {videoUrl ? (
+                    <video
+                        ref={videoRef}
+                        className="mv-player-video"
+                        src={videoUrl}
+                        autoPlay
+                        muted
+                        playsInline
+                        onLoadedMetadata={() => {
+                            const video = videoRef.current;
+                            const audioTime = trackPlayer.progress.currentTime;
+                            if (video && isFinite(audioTime) && audioTime > 0) {
+                                video.currentTime = audioTime;
+                            }
+                        }}
+                    ></video>
+                ) : error ? (
+                    <div className="mv-player-error">
+                        {error.key ? t(error.key) : error.message}
+                    </div>
+                ) : (
+                    <Loading></Loading>
+                )}
+            </div>
+            <PlayerControl
+                videoRef={videoRef}
+                videoItem={visualItem}
+                quality={quality}
+                hidden={collapsed}
+            ></PlayerControl>
+        </DraggableWindow>
     );
 }

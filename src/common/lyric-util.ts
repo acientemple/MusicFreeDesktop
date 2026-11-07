@@ -445,6 +445,77 @@ export interface ICandidateScore {
     artist: number;
     album: number;
     duration: number;
+    /** 版本一致性 */
+    version: number;
+}
+
+/**
+ * 版本类标记。同一首歌的原版与 Live / DJ / 翻唱版，
+ * 歌名几乎一样，只有这些标记能区分开
+ */
+const VERSION_KINDS: { kind: string; pattern: RegExp }[] = [
+    { kind: "live", pattern: /\blive\b|现场|演唱会|实况/i },
+    { kind: "dj", pattern: /\bdj\b/i },
+    { kind: "remix", pattern: /remix|混音/i },
+    { kind: "cover", pattern: /翻唱|\bcover\b/i },
+    {
+        kind: "instrumental",
+        pattern: /instrumental|伴奏|纯音乐|纯歌|纯钢琴/i,
+    },
+    { kind: "demo", pattern: /\bdemo\b|小样/i },
+    { kind: "acoustic", pattern: /\bacoustic\b|不插电/i },
+    { kind: "version", pattern: /\bver\.?\b|\bversion\b|版本/i },
+    { kind: "official", pattern: /原版|官方版|正版|正式版|完整版/i },
+    { kind: "remaster", pattern: /remaster|重制/i },
+    { kind: "edit", pattern: /\bedit\b|剪辑版|电台版/i },
+];
+
+/**
+ * 取出标题里的版本标记。
+ * 画质类的修饰（无损 / 320K / FLAC）不算版本差异，不在这里
+ */
+export function getVersionKinds(text?: string | null): string[] {
+    const source = String(text ?? "");
+    if (!source.trim()) {
+        return [];
+    }
+    return VERSION_KINDS.filter((item) => item.pattern.test(source)).map(
+        (item) => item.kind,
+    );
+}
+
+/**
+ * 版本一致性。
+ * 候选比目标多出版本标记（原版 vs Live / DJ / 翻唱）要扣分最多，
+ * 目标有标记而候选没有只轻微扣分——很多平台就是不给版本后缀
+ */
+function compareVersion(a?: string | null, b?: string | null): number {
+    const candidate = getVersionKinds(a);
+    const target = getVersionKinds(b);
+    if (!candidate.length && !target.length) {
+        return 1;
+    }
+    if (!candidate.length) {
+        return 0.85;
+    }
+    if (!target.length) {
+        return 0.6;
+    }
+    const same =
+        candidate.length === target.length &&
+        candidate.every((kind) => target.includes(kind));
+    if (same) {
+        return 1;
+    }
+    const candidateExtra = candidate.filter((kind) => !target.includes(kind));
+    const targetExtra = target.filter((kind) => !candidate.includes(kind));
+    if (candidateExtra.length && !targetExtra.length) {
+        return 0.6;
+    }
+    if (!candidateExtra.length && targetExtra.length) {
+        return 0.85;
+    }
+    return 0.3;
 }
 
 interface IScorableItem {
@@ -552,11 +623,16 @@ export function scoreCandidate(
     const artist = compareArtist(candidate, target);
     const album = compareName(candidate.album, target.album);
     const duration = compareDuration(candidate.duration, target.duration);
+    const version = compareVersion(candidate.title, target.title);
 
     const total =
-        0.5 * title + 0.25 * artist + 0.1 * album + 0.15 * duration;
+        0.45 * title +
+        0.22 * artist +
+        0.08 * album +
+        0.13 * duration +
+        0.12 * version;
 
-    return { total, title, artist, album, duration };
+    return { total, title, artist, album, duration, version };
 }
 
 /**

@@ -32,6 +32,7 @@ import SvgAsset from "../SvgAsset";
 import musicSheetDB from "@/renderer/core/db/music-sheet-db";
 import DragReceiver, { startDrag } from "../DragReceiver";
 import { i18n } from "@/shared/i18n/renderer";
+import { useCurrentMusic } from "@renderer/core/track-player/hooks";
 import isLocalMusic from "@/renderer/utils/is-local-music";
 import AppConfig from "@shared/app-config/renderer";
 import PluginManager from "@shared/plugin-manager/renderer";
@@ -366,6 +367,8 @@ function _MusicList(props: IMusicListProps) {
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const musicMeta = useMusicMeta();
+    /** 正在播放的那一行要高亮出来 */
+    const currentMusic = useCurrentMusic();
     /** 展示用列表：套用用户手动改过的信息，播放时仍用原始条目 */
     const displayList = useMemo(
         () => applyMusicMetaToList(musicList),
@@ -538,6 +541,14 @@ function _MusicList(props: IMusicListProps) {
                                 key={row.id}
                                 data-active={
                                     activeItems.has(virtualItem.rowIndex)
+                                }
+                                data-playing={
+                                    isSameMedia(
+                                        row.original,
+                                        currentMusic,
+                                    )
+                                        ? "true"
+                                        : undefined
                                 }
                                 onContextMenu={(e) => {
                                     if (

@@ -2,6 +2,7 @@ import ReactDOM from "react-dom/client";
 import App from "../app";
 import "animate.css";
 import ModalComponent from "../components/Modal";
+import MVPlayerComponent from "../components/Modal/templates/MVPlayer";
 import bootstrap from "./bootstrap";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import MainPage from "../pages/main-page";
@@ -42,6 +43,7 @@ function Root() {
                     </Route>
                 </Routes>
                 <ModalComponent></ModalComponent>
+                <MVPlayerComponent></MVPlayerComponent>
             </HashRouter>
             <ContextMenuComponent></ContextMenuComponent>
             <ToastContainer

@@ -177,7 +177,9 @@ declare namespace IPlugin {
     /** 查找同一首歌的其他可完整播放版本 */
     getMusicAlternatives?: (
       musicItem: IMusic.IMusicItemPartial,
-      page?: number
+      page?: number,
+      /** 自定义检索关键词，替换默认的歌名 */
+      keyword?: string
     ) => Promise<IGetAlternativesResult | null>;
     /** 查找这首歌对应的 MV 候选 */
     getMusicVideoCandidates?: (

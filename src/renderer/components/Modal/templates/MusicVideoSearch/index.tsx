@@ -8,7 +8,8 @@ import Empty from "@/renderer/components/Empty";
 import albumImg from "@/assets/imgs/album-cover.jpg";
 import { setFallbackAlbum } from "@/renderer/utils/img-on-error";
 import PluginManager, { useSupportedPlugin } from "@shared/plugin-manager/renderer";
-import { hideModal, showModal } from "../..";
+import { hideModal } from "../..";
+import { showMVPlayer } from "../MVPlayer/store";
 import { getMediaPrimaryKey, isSameMedia } from "@/common/media-util";
 import { applyMusicMeta } from "@/renderer/core/music-meta";
 import { clearMusicMv, setMusicMv, useMusicMv } from "@/renderer/core/music-mv";
@@ -166,7 +167,7 @@ export default function MusicVideoSearch(props: IProps) {
                                             );
                                         }
                                         hideModal();
-                                        showModal("MVPlayer", {
+                                        showMVPlayer({
                                             musicItem,
                                             videoItem: item,
                                         });

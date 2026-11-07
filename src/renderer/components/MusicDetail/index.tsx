@@ -11,6 +11,7 @@ import { useCurrentMusic } from "@renderer/core/track-player/hooks";
 import { useEffect, useMemo } from "react";
 import { musicDetailShownStore } from "@renderer/components/MusicDetail/store";
 import { showModal } from "@renderer/components/Modal";
+import { showMVPlayer } from "@renderer/components/Modal/templates/MVPlayer/store";
 import { useSupportedPlugin, usePluginDisplayName } from "@shared/plugin-manager/renderer";
 import SvgAsset from "@renderer/components/SvgAsset";
 import { applyMusicMeta, useMusicMeta } from "@renderer/core/music-meta";
@@ -124,7 +125,7 @@ function MusicDetail() {
                                     role="button"
                                     title={t("music_detail.watch_mv")}
                                     onClick={() => {
-                                        showModal("MVPlayer", {
+                                        showMVPlayer({
                                             musicItem,
                                             videoItem: boundMv,
                                         });

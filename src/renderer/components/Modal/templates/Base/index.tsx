@@ -61,21 +61,32 @@ function Base(props: IBaseModalProps) {
 
 interface IHeaderProps {
     children: ReactNode;
+    /** 自定义关闭行为，默认关闭当前弹窗 */
+    onClose?: () => void;
+    /** 标题栏右侧的附加内容 */
+    extra?: ReactNode;
 }
 function Header(props: IHeaderProps) {
-    const { children } = props;
+    const { children, onClose, extra } = props;
 
     return (
         <div className="components--modal-base-header">
             {children}
-            <div
-                role="button"
-                className="components--modal-base-header-close opacity-button"
-                onClick={() => {
-                    hideModal();
-                }}
-            >
-                <SvgAsset iconName="x-mark"></SvgAsset>
+            <div className="components--modal-base-header-right">
+                {extra}
+                <div
+                    role="button"
+                    className="components--modal-base-header-close opacity-button"
+                    onClick={() => {
+                        if (onClose) {
+                            onClose();
+                        } else {
+                            hideModal();
+                        }
+                    }}
+                >
+                    <SvgAsset iconName="x-mark"></SvgAsset>
+                </div>
             </div>
         </div>
     );

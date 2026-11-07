@@ -21,8 +21,8 @@ interface IProps {
     /** 画面条目，下载用 */
     videoItem?: IMusic.IMusicItem;
     quality?: IMusic.IQualityKey;
-    onToggleMaximize?: () => void;
-    isMaximized?: boolean;
+    /** 收起时整条控制栏藏起来 */
+    hidden?: boolean;
 }
 
 function formatDuration(seconds: number) {
@@ -38,8 +38,7 @@ export default function PlayerControl({
     videoRef,
     videoItem,
     quality = "standard",
-    onToggleMaximize,
-    isMaximized,
+    hidden,
 }: IProps) {
     const { t } = useTranslation();
     const { currentTime, duration } = useProgress();
@@ -169,7 +168,7 @@ export default function PlayerControl({
     };
 
     return (
-        <div className="mv-player-control">
+        <div className="mv-player-control" style={{ display: hidden ? "none" : "flex" }}>
             <span className="mv-player-time">{formatDuration(currentTime)}</span>
             <div
                 className="mv-player-progress"
@@ -241,24 +240,6 @@ export default function PlayerControl({
                         }}
                     ></Slider>
                 </div>
-            </div>
-            <div
-                className="mv-player-btn"
-                role="button"
-                title={t(
-                    isMaximized
-                        ? "modal.mv_player_restore"
-                        : "modal.mv_player_maximize",
-                )}
-                onClick={() => {
-                    onToggleMaximize?.();
-                }}
-            >
-                <SvgAsset
-                    iconName={
-                        isMaximized ? "arrows-pointing-in" : "arrows-pointing-out"
-                    }
-                ></SvgAsset>
             </div>
             <div
                 className="mv-player-btn"

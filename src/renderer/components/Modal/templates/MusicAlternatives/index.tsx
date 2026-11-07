@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import Base from "../Base";
+import DraggableWindow from "../Base/DraggableWindow";
 import "./index.scss";
 import Loading from "@/renderer/components/Loading";
 import Empty from "@/renderer/components/Empty";
@@ -13,6 +14,7 @@ import MusicSheet from "@/renderer/core/music-sheet";
 import { hideModal } from "../..";
 import { getMediaPrimaryKey } from "@/common/media-util";
 import { applyMusicMeta } from "@/renderer/core/music-meta";
+import SvgAsset from "@/renderer/components/SvgAsset";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
@@ -71,6 +73,13 @@ export default function MusicAlternatives(props: IProps) {
     const [loading, setLoading] = useState(true);
     const [items, setItems] = useState<IMusic.IMusicItem[]>([]);
     const [emptyText, setEmptyText] = useState<string | null>(null);
+    /** 输入框里的实时内容 */
+    const [keyword, setKeyword] = useState("");
+    /** 已经提交去检索的关键词 */
+    const [submittedKeyword, setSubmittedKeyword] = useState<string | null>(
+        null,
+    );
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const plugins = useSupportedPlugin("getMusicAlternatives");
     // useSupportedPlugin 每次渲染都会返回新数组，取哈希串做依赖才不会反复触发
@@ -78,6 +87,12 @@ export default function MusicAlternatives(props: IProps) {
         () => plugins.map((item) => item.hash).join("|"),
         [plugins],
     );
+
+    // 换了曲子就把关键词重置回原歌名
+    useEffect(() => {
+        setKeyword(displayItem?.title ?? "");
+        setSubmittedKeyword(null);
+    }, [musicItem?.platform, musicItem?.id]);
 
     useEffect(() => {
         let canceled = false;
@@ -108,6 +123,7 @@ export default function MusicAlternatives(props: IProps) {
                         "getMusicAlternatives",
                         target,
                         1,
+                        submittedKeyword?.trim() || undefined,
                     ),
                 ),
             );
@@ -129,12 +145,50 @@ export default function MusicAlternatives(props: IProps) {
         return () => {
             canceled = true;
         };
-    }, [musicItem?.platform, musicItem?.id, pluginKey]);
+    }, [musicItem?.platform, musicItem?.id, pluginKey, submittedKeyword]);
+
+    const submitKeyword = () => {
+        setSubmittedKeyword(keyword.trim() || null);
+    };
 
     return (
         <Base defaultClose withBlur={false}>
-            <div className="modal--music-alternatives-container shadow backdrop-color">
-                <Base.Header>
+            <DraggableWindow
+                className="modal--music-alternatives-container shadow backdrop-color"
+                defaultWidth={620}
+                defaultHeight={560}
+                minWidth={420}
+                minHeight={320}
+            >
+                <Base.Header
+                    extra={
+                        <div className="alternatives-search">
+                            <input
+                                ref={inputRef}
+                                className="alternatives-search-input"
+                                type="text"
+                                placeholder={t("modal.music_alternatives_search")}
+                                value={keyword}
+                                onChange={(e) => {
+                                    setKeyword(e.target.value);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        submitKeyword();
+                                    }
+                                }}
+                            />
+                            <div
+                                className="alternatives-search-btn"
+                                role="button"
+                                title={t("modal.music_alternatives_search")}
+                                onClick={submitKeyword}
+                            >
+                                <SvgAsset iconName="magnifying-glass"></SvgAsset>
+                            </div>
+                        </div>
+                    }
+                >
                     <div className="header-title">
                         {t("modal.music_alternatives")}
                     </div>
@@ -168,7 +222,9 @@ export default function MusicAlternatives(props: IProps) {
                                         <div className="title">{item.title}</div>
                                         <div className="artist">
                                             {item.artist || "-"}
-                                            {item.album ? ` · ${item.album}` : ""}
+                                            {item.album
+                                                ? ` · ${item.album}`
+                                                : ""}
                                         </div>
                                     </div>
                                     <div className="alternative-tags">
@@ -190,7 +246,9 @@ export default function MusicAlternatives(props: IProps) {
                                             )}
                                         </div>
                                         {duration ? (
-                                            <div className="duration">{duration}</div>
+                                            <div className="duration">
+                                                {duration}
+                                            </div>
                                         ) : null}
                                     </div>
                                 </div>
@@ -200,12 +258,13 @@ export default function MusicAlternatives(props: IProps) {
                         <div className="alternatives-empty">
                             <Empty></Empty>
                             <div className="empty-text">
-                                {emptyText ?? t("modal.music_alternatives_empty")}
+                                {emptyText ??
+                                    t("modal.music_alternatives_empty")}
                             </div>
                         </div>
                     )}
                 </div>
-            </div>
+            </DraggableWindow>
         </Base>
     );
 }

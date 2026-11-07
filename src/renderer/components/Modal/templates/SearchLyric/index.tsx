@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Base from "../Base";
+import DraggableWindow from "../Base/DraggableWindow";
 import "./index.scss";
 import SvgAsset from "@/renderer/components/SvgAsset";
 import useSearchLyric from "./hooks/useSearchLyric";
@@ -34,8 +35,15 @@ export default function SearchLyric(props: IProps) {
 
     return (
         <Base defaultClose withBlur={false}>
-            <div className="modal--search-lyric-container shadow backdrop-color">
+            <DraggableWindow
+                className="modal--search-lyric-container shadow backdrop-color"
+                defaultWidth={620}
+                defaultHeight={560}
+                minWidth={420}
+                minHeight={320}
+            >
                 <Base.Header>
+                    <div className="header-title">{t("modal.search_lyric")}</div>
                     <div className="search-lyric-input-container">
                         <input
                             className="search-lyric-input"
@@ -64,14 +72,21 @@ export default function SearchLyric(props: IProps) {
                 <Tab.Group>
                     <Tab.List className="tab-list-container">
                         {availablePlugins.map((plugin) => (
-                            <Tab key={plugin.hash} as="div" className="tab-list-item">
+                            <Tab
+                                key={plugin.hash}
+                                as="div"
+                                className="tab-list-item"
+                            >
                                 {plugin.displayName ?? plugin.platform}
                             </Tab>
                         ))}
                     </Tab.List>
                     <Tab.Panels className={"tab-panels-container"}>
                         {availablePlugins.map((plugin) => (
-                            <Tab.Panel className="tab-panel-container" key={plugin.hash}>
+                            <Tab.Panel
+                                className="tab-panel-container"
+                                key={plugin.hash}
+                            >
                                 <SearchResult
                                     data={searchResults.data[plugin.hash]}
                                     musicItem={musicItem}
@@ -80,7 +95,7 @@ export default function SearchLyric(props: IProps) {
                         ))}
                     </Tab.Panels>
                 </Tab.Group>
-            </div>
+            </DraggableWindow>
         </Base>
     );
 }

@@ -18,11 +18,16 @@ interface IProps {
     minHeight?: number;
     /** 最大化状态变化时通知外面，用来切图标 */
     onMaximizeChange?: (maximized: boolean) => void;
+    /** 收起状态变化时通知外面，用来暂停视频之类的 */
+    onCollapsedChange?: (collapsed: boolean) => void;
+    /** 收起时窗口的宽度 */
+    collapsedWidth?: number;
 }
 
 /** 外面能操作窗口的接口 */
 export interface IDraggableWindowHandle {
     toggleMaximize: () => void;
+    toggleCollapsed: () => void;
 }
 
 interface IBox {
@@ -35,6 +40,9 @@ interface IBox {
 /** 拖动时至少留这么多在屏幕里，别把窗口整个拖出去找不着 */
 const KEEP_ON_SCREEN = 80;
 
+/** 收起后只留标题栏，高度与标题栏一致 */
+const COLLAPSED_HEIGHT = 48;
+
 const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
     function DraggableWindow(props, ref) {
         const {
@@ -45,6 +53,8 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
             minWidth = 360,
             minHeight = 240,
             onMaximizeChange,
+            onCollapsedChange,
+            collapsedWidth = 320,
         } = props;
 
         const boxRef = useRef<HTMLDivElement>(null);
@@ -62,7 +72,13 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
         } | null>(null);
         /** 最大化前的窗口位置，还原时用 */
         const restoreBoxRef = useRef<IBox | null>(null);
+        /** 收起前的窗口位置，展开时用 */
+        const collapsedRestoreRef = useRef<{
+            box: IBox;
+            maximized: boolean;
+        } | null>(null);
         const maximizedRef = useRef(false);
+        const collapsedRef = useRef(false);
         const boxStateRef = useRef<IBox | null>(null);
 
         const [box, setBox] = useState<IBox>(() => {
@@ -76,6 +92,7 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
             };
         });
         const [maximized, setMaximized] = useState(false);
+        const [collapsed, setCollapsed] = useState(false);
 
         useEffect(() => {
             boxStateRef.current = box;
@@ -115,7 +132,59 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
             onMaximizeChange?.(next);
         }, [onMaximizeChange]);
 
-        useImperativeHandle(ref, () => ({ toggleMaximize }), [toggleMaximize]);
+        /** 收起到右下角的一条，展开时恢复原来的尺寸与位置 */
+        const toggleCollapsed = useCallback(() => {
+            const next = !collapsedRef.current;
+            collapsedRef.current = next;
+            setCollapsed(next);
+            if (next) {
+                collapsedRestoreRef.current = {
+                    box: boxStateRef.current as IBox,
+                    maximized: maximizedRef.current,
+                };
+                const width = Math.min(
+                    collapsedWidth,
+                    Math.floor(window.innerWidth - 32),
+                );
+                setBox({
+                    x: Math.max(0, window.innerWidth - width - 16),
+                    y: Math.max(0, window.innerHeight - COLLAPSED_HEIGHT - 16),
+                    w: width,
+                    h: COLLAPSED_HEIGHT,
+                });
+                // 收起时先退出最大化，展开时再回到最大化
+                if (maximizedRef.current) {
+                    maximizedRef.current = false;
+                    setMaximized(false);
+                    onMaximizeChange?.(false);
+                }
+            } else {
+                const restore = collapsedRestoreRef.current;
+                collapsedRestoreRef.current = null;
+                if (restore) {
+                    if (restore.maximized) {
+                        maximizedRef.current = true;
+                        setMaximized(true);
+                        onMaximizeChange?.(true);
+                        setBox({
+                            x: 0,
+                            y: 0,
+                            w: window.innerWidth,
+                            h: window.innerHeight,
+                        });
+                    } else {
+                        setBox(restore.box);
+                    }
+                }
+            }
+            onCollapsedChange?.(next);
+        }, [collapsedWidth, onCollapsedChange, onMaximizeChange]);
+
+        useImperativeHandle(
+            ref,
+            () => ({ toggleMaximize, toggleCollapsed }),
+            [toggleMaximize, toggleCollapsed],
+        );
 
         // 应用窗口本身变了尺寸，之前摆的位置可能跑到屏幕外
         useEffect(() => {
@@ -143,11 +212,25 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
             }
             const target = e.target as HTMLElement;
             // 只有标题栏能拖动，关闭按钮除外
-            if (!target.closest(".components--modal-base-header")) {
+            const header = target.closest(".components--modal-base-header");
+            if (!header) {
                 return;
             }
             if (target.closest(".components--modal-base-header-close")) {
                 return;
+            }
+            // 标题栏里的输入框与按钮有自己的交互，不能被拖动抢走。
+            // 只能看标题栏内部：遮罩本身是 role="button"，它是标题栏的祖先，不能算
+            let node: HTMLElement | null = target;
+            while (node && node !== header) {
+                if (
+                    node.matches(
+                        "input, textarea, select, button, [role='button']",
+                    )
+                ) {
+                    return;
+                }
+                node = node.parentElement;
             }
             const rect = boxRef.current?.getBoundingClientRect();
             if (!rect) {
@@ -226,7 +309,9 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
         return (
             <div
                 ref={boxRef}
-                className={`components--draggable-window ${className ?? ""}`}
+                className={`components--draggable-window ${
+                    collapsed ? "components--draggable-window--collapsed" : ""
+                } ${className ?? ""}`}
                 style={{
                     width: box.w,
                     height: box.h,
@@ -238,7 +323,7 @@ const DraggableWindow = forwardRef<IDraggableWindowHandle, IProps>(
                 onPointerCancel={onPointerUp}
             >
                 {children}
-                {maximized ? null : (
+                {maximized || collapsed ? null : (
                     <div
                         className="components--draggable-window-resize"
                         onPointerDown={onResizePointerDown}

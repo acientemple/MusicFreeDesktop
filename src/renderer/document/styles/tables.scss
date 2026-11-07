@@ -51,6 +51,15 @@ table {
                 background: var(--listActiveColor);
 
             }
+
+            // 正在播放的那一行：主色调（棕黄）淡色底，明暗主题都适用
+            &[data-playing="true"] {
+                background: color-mix(
+                    in srgb,
+                    var(--primaryColor) 26%,
+                    var(--backgroundColor)
+                );
+            }
         }
     }
 }
