@@ -6,8 +6,10 @@ import { useTranslation } from "react-i18next";
 
 export default function HeaderNavigator() {
     const navigate = useNavigate();
-    const canBack = history.state.idx > 0;
-    const canGo = history.state.idx < history.length - 1;
+    // history.state 可能是 null（比如地址栏被直接改了 hash），这里兜一下
+    const historyIndex = history.state?.idx ?? 0;
+    const canBack = historyIndex > 0;
+    const canGo = historyIndex < history.length - 1;
 
     const { t } = useTranslation();
 
