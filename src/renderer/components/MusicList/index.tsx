@@ -42,6 +42,12 @@ import {
     applyMusicMetaToList,
     useMusicMeta,
 } from "@/renderer/core/music-meta";
+import {
+    getDisplayDuration,
+    normalizeDuration,
+    setVerifiedDuration,
+    useVerifiedDurations,
+} from "@/renderer/core/music-duration";
 
 interface IMusicListProps {
     /** 展示的播放列表 */
@@ -133,8 +139,7 @@ const columnDef: ColumnDef<IMusic.IMusicItem>[] = [
         size: 64,
         maxSize: 150,
         minSize: 48,
-        cell: (info) =>
-            info.getValue() ? secondsToDuration(info.getValue()) : "--:--",
+        cell: (info) => <DurationCell musicItem={info.row.original} />,
         // @ts-ignore
         fr: 1,
     }),
@@ -152,6 +157,18 @@ const columnDef: ColumnDef<IMusic.IMusicItem>[] = [
 ];
 
 const estimizeItemHeight = 2.6 * 13; // lineheight 2.6rem
+
+/**
+ * 时长显示：优先用播放时校正过的真实时长，
+ * 没有校正记录就用插件给的值（毫秒写成秒的也会被纠正）。
+ */
+function DurationCell(props: { musicItem: IMusic.IMusicItem }) {
+    const { musicItem } = props;
+    /** 订阅校正结果，有变化就重画 */
+    useVerifiedDurations();
+    const duration = getDisplayDuration(musicItem);
+    return <>{duration ? secondsToDuration(duration) : "--:--"}</>;
+}
 
 export function showMusicContextMenu(
     musicItems: IMusic.IMusicItem | IMusic.IMusicItem[],
@@ -224,6 +241,40 @@ export function showMusicContextMenu(
                 showModal("MusicVideoSearch", {
                     musicItem: musicItems as IMusic.IMusicItem,
                 });
+            },
+        },
+        {
+            title: i18n.t("music_list_context_menu.fix_duration"),
+            icon: "clock",
+            show: !isArray && !isLocalMusic(musicItems),
+            async onClick() {
+                const item = musicItems as IMusic.IMusicItem;
+                try {
+                    const info = await PluginManager.callPluginDelegateMethod(
+                        { platform: item.platform },
+                        "getMusicInfo",
+                        item,
+                    );
+                    const duration = normalizeDuration(info?.duration);
+                    if (!duration) {
+                        toast.info(
+                            i18n.t("music_list_context_menu.fix_duration_unknown"),
+                        );
+                        return;
+                    }
+                    await setVerifiedDuration(item, duration);
+                    toast.success(
+                        i18n.t("music_list_context_menu.fix_duration_success", {
+                            duration: secondsToDuration(duration),
+                        }),
+                    );
+                } catch (e) {
+                    toast.error(
+                        i18n.t("music_list_context_menu.fix_duration_fail", {
+                            reason: e?.message ?? "",
+                        }),
+                    );
+                }
             },
         },
         {

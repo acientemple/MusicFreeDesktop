@@ -17,6 +17,8 @@ class MusicSheetDB extends Dexie {
     musicMeta: Table<IMusic.IMusicMetaItem>;
     /** 歌曲挑定的 MV */
     musicMv: Table<IMusic.IMusicMvItem>;
+    /** 校正过的歌曲时长 */
+    musicDuration: Table<IMusic.IMusicDurationItem>;
 
     constructor() {
         super("musicSheetDB");
@@ -43,6 +45,18 @@ class MusicSheetDB extends Dexie {
             musicMeta: "[platform+id]",
             /** 歌曲挑定的 MV */
             musicMv: "[platform+id]",
+        });
+        this.version(1.4).stores({
+            sheets: "&id, title, artist, createAt, $$sortIndex",
+            musicStore: "[platform+id], title, artist, album",
+            /** 本地音乐 */
+            localMusicStore: "[platform+id], title, artist, album, $$localPath",
+            /** 歌曲信息覆盖 */
+            musicMeta: "[platform+id]",
+            /** 歌曲挑定的 MV */
+            musicMv: "[platform+id]",
+            /** 校正过的歌曲时长 */
+            musicDuration: "[platform+id]",
         });
     }
 }

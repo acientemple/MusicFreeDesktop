@@ -39,6 +39,7 @@ import {
 import { isEmptyLyricSource } from "@/common/lyric-util";
 import { fsUtil } from "@shared/utils/renderer";
 import PluginManager from "@shared/plugin-manager/renderer";
+import { correctDurationByMeasured } from "@renderer/core/music-duration";
 
 const {
     musicQueueStore,
@@ -144,6 +145,9 @@ class TrackPlayer {
     /** 最近一次使用的音源 */
     private lastMediaSource: IPlugin.IMediaSourceResult | null = null;
 
+    /** 最近一次测到的音频时长，用来判断是不是变了 */
+    private lastMeasuredDuration = 0;
+
     private ee: EventEmitter<InternalPlayerEvents>;
 
     constructor() {
@@ -154,6 +158,10 @@ class TrackPlayer {
 
     on<T extends keyof InternalPlayerEvents>(event: T, callback: InternalPlayerEvents[T]) {
         this.ee.on(event, callback as any);
+    }
+
+    off<T extends keyof InternalPlayerEvents>(event: T, callback: InternalPlayerEvents[T]) {
+        this.ee.off(event, callback as any);
     }
 
     private setupEvents() {
@@ -202,6 +210,7 @@ class TrackPlayer {
         // 进度更新
         audioController.onProgressUpdate = ((progress) => {
             this.setProgress(progress);
+            this.captureRealDuration(progress.duration);
             // 检查歌词
             if (this.lyric?.parser) {
                 const lyricItem = this.lyric.parser.getPosition(progress.currentTime);
@@ -930,10 +939,32 @@ class TrackPlayer {
         removeUserPreference("currentProgress");
     }
 
+    /**
+     * 用实际播出来的音频长度校正歌曲时长：
+     * 插件给的时长有的是毫秒、有的是空的、有的干脆是错的，
+     * 音频文件本身的长度才是准的。
+     */
+    private captureRealDuration(duration: number) {
+        if (!isFinite(duration) || duration <= 0) {
+            return;
+        }
+        // 进度事件很频繁，时长没变就不重复处理
+        if (Math.abs(duration - this.lastMeasuredDuration) < 1) {
+            return;
+        }
+        this.lastMeasuredDuration = duration;
+        const musicItem = this.currentMusic;
+        if (!musicItem) {
+            return;
+        }
+        correctDurationByMeasured(musicItem, duration).catch(console.error);
+    }
+
     private setTrack(mediaSource: IPlugin.IMediaSourceResult, musicItem: IMusic.IMusicItem, options: ITrackOptions = {
         autoPlay: true,
     }) {
         this.resetProgress();
+        this.lastMeasuredDuration = 0;
         this.lastMediaSource = mediaSource;
         this.audioController.setTrackSource(mediaSource, musicItem);
 

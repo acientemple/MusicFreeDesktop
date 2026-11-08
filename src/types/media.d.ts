@@ -76,6 +76,14 @@ declare namespace IMusic {
     mv: IMusicItem;
   }
 
+  /** 校正后的歌曲时长（秒） */
+  interface IMusicDurationItem {
+    platform: string;
+    id: string;
+    /** 实际播放测得的时长（秒） */
+    duration: number;
+  }
+
   // 音乐的内部数据
   interface IMusicItemInternalData {
     downloadData?: {
