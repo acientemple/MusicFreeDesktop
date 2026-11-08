@@ -48,6 +48,10 @@ import {
     setVerifiedDuration,
     useVerifiedDurations,
 } from "@/renderer/core/music-duration";
+import {
+    clearLocateTarget,
+    useLocateTarget,
+} from "@/renderer/core/music-locate";
 
 interface IMusicListProps {
     /** 展示的播放列表 */
@@ -475,6 +479,35 @@ function _MusicList(props: IMusicListProps) {
         lastActiveIndexRef.current = 0;
         musicListRef.current = musicList;
     }, [musicList]);
+
+    /**
+     * 定位：从播放队列里点一首歌跳过来时，
+     * 把那一行滚到眼前并选中。
+     */
+    const locateTarget = useLocateTarget();
+    useEffect(() => {
+        if (!locateTarget?.key) {
+            return;
+        }
+        // 只认指定歌单里的那一次定位，免得当前页面抢先消费掉
+        if (
+            locateTarget.sheetId &&
+            locateTarget.sheetId !== musicSheet?.id
+        ) {
+            return;
+        }
+        const rows = table.getRowModel().rows;
+        const index = rows.findIndex(
+            (row) => getMediaPrimaryKey(row.original) === locateTarget.key,
+        );
+        if (index < 0) {
+            // 列表还没加载出来，等加载完再定位
+            return;
+        }
+        setActiveItems(new Set([index]));
+        virtualController.scrollToIndex(Math.max(0, index - 2), "smooth");
+        clearLocateTarget();
+    }, [locateTarget?.nonce, displayList]);
 
     useEffect(() => {
         const ctrlAHandler = (evt: Event) => {

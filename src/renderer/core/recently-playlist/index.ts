@@ -31,6 +31,11 @@ export async function setupRecentlyPlaylist() {
     recentlyPlayListStore.setValue(playList);
 }
 
+/** 取当前最近播放列表 */
+export function getRecentlyPlaylist() {
+    return recentlyPlayListStore.getValue();
+}
+
 export async function addToRecentlyPlaylist(musicItem: IMusic.IMusicItem) {
     if (!musicItem || !musicItem.id || !musicItem.platform) {
         return;
