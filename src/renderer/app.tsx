@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { updaterUtil } from "@shared/utils/renderer";
+import WindowResizeHandles from "./components/WindowResize";
 
 export default function App() {
     const { t } = useTranslation();
@@ -36,6 +37,7 @@ export default function App() {
             </div>
             <MusicDetail></MusicDetail>
             <MusicBar></MusicBar>
+            <WindowResizeHandles></WindowResizeHandles>
         </div>
     );
 }

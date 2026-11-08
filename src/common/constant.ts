@@ -18,6 +18,12 @@ export const localFilePathSymbol = Symbol.for("local-file-path");
 export const localPluginName = "本地";
 export const localPluginHash = "本地";
 
+/** 主窗口允许缩到的最小尺寸 */
+export const mainWindowMinSize = {
+    width: 400,
+    height: 320,
+};
+
 export const supportedMediaType = [
     "music",
     "album",

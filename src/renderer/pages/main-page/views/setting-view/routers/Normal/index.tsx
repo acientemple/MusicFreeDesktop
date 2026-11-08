@@ -29,6 +29,10 @@ export default function Normal() {
                 label={t("settings.normal.auto_load_more")}
                 keyPath="normal.autoLoadMore"
             ></CheckBoxSettingItem>
+            <CheckBoxSettingItem
+                label={t("settings.normal.always_on_top")}
+                keyPath="normal.alwaysOnTop"
+            ></CheckBoxSettingItem>
             <RadioGroupSettingItem
                 label={t("settings.normal.close_behavior")}
                 keyPath="normal.closeBehavior"

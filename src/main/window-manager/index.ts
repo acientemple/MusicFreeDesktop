@@ -1,7 +1,7 @@
 import { app, BrowserWindow, nativeImage, screen } from "electron";
 import getResourcePath from "@/common/get-resource-path";
 import { IWindowEvents, IWindowManager } from "@/types/main/window-manager";
-import { localPluginName, PlayerState, ResourceName } from "@/common/constant";
+import { localPluginName, mainWindowMinSize, PlayerState, ResourceName } from "@/common/constant";
 import voidCallback from "@/common/void-callback";
 import ThumbBarUtil from "@/common/thumb-bar-util";
 import EventEmitter from "eventemitter3";
@@ -96,8 +96,11 @@ class WindowManager implements IWindowManager {
         const mainWindow = new BrowserWindow({
             height: initSize?.height ?? 700,
             width: initSize?.width ?? 1050,
-            minHeight: 700,
-            minWidth: 1050,
+            // 无边框窗口在 Windows 上没有系统缩放边框，这里放开尺寸限制，
+            // 由自定义的缩放感应条来改大小（见 shared/window-resize）
+            minHeight: mainWindowMinSize.height,
+            minWidth: mainWindowMinSize.width,
+            resizable: true,
             webPreferences: {
                 preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
                 nodeIntegration: true,
@@ -107,6 +110,7 @@ class WindowManager implements IWindowManager {
                 webviewTag: true,
             },
             frame: false,
+            alwaysOnTop: !!AppConfig.getConfig("normal.alwaysOnTop"),
             icon: nativeImage.createFromPath(getResourcePath(ResourceName.LOGO_IMAGE)),
         });
 
@@ -178,6 +182,21 @@ class WindowManager implements IWindowManager {
                 mainWindow.hide();
                 mainWindow.setSkipTaskbar(true);
             }
+        });
+
+        // 4.1 窗口置顶开关
+        const updateAlwaysOnTop = (patch: IAppConfig) => {
+            if (patch["normal.alwaysOnTop"] === undefined) {
+                return;
+            }
+            if (mainWindow.isDestroyed()) {
+                return;
+            }
+            mainWindow.setAlwaysOnTop(!!patch["normal.alwaysOnTop"]);
+        };
+        AppConfig.onConfigUpdated(updateAlwaysOnTop);
+        mainWindow.on("closed", () => {
+            AppConfig.offConfigUpdated(updateAlwaysOnTop);
         });
 
         // 5. 更新thumbbar

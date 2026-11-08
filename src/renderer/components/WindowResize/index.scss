@@ -1,0 +1,77 @@
+/* 窗口四周的缩放感应条：平时看不见，鼠标移上去才显示边框提示 */
+
+.window-resize-handle {
+    position: fixed;
+    z-index: 999999;
+    -webkit-app-region: no-drag;
+}
+
+.window-resize-handle-n {
+    top: 0;
+    left: 6px;
+    right: 6px;
+    height: 5px;
+    cursor: ns-resize;
+}
+
+.window-resize-handle-s {
+    bottom: 0;
+    left: 6px;
+    right: 6px;
+    height: 5px;
+    cursor: ns-resize;
+}
+
+.window-resize-handle-e {
+    top: 6px;
+    bottom: 6px;
+    right: 0;
+    width: 5px;
+    cursor: ew-resize;
+}
+
+.window-resize-handle-w {
+    top: 6px;
+    bottom: 6px;
+    left: 0;
+    width: 5px;
+    cursor: ew-resize;
+}
+
+.window-resize-handle-ne {
+    top: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    cursor: nesw-resize;
+}
+
+.window-resize-handle-nw {
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    cursor: nwse-resize;
+}
+
+.window-resize-handle-se {
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    cursor: nwse-resize;
+}
+
+.window-resize-handle-sw {
+    bottom: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    cursor: nesw-resize;
+}
+
+/* 缩放过程中不要选中文本，也不要出现拖拽光标 */
+body.window-resizing {
+    user-select: none;
+    cursor: default;
+}

@@ -7,6 +7,8 @@ interface _IAppConfig {
     "normal.checkPrerelease": boolean;
     "normal.autoLoadMore": boolean;
     "normal.taskbarThumb": "window" | "artwork";
+    /** 主窗口是否始终置顶 */
+    "normal.alwaysOnTop": boolean;
     "normal.musicListColumnsShown": Array<"duration" | "platform">;
     "normal.language": string;
 

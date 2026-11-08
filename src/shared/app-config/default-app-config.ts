@@ -10,6 +10,7 @@ const _defaultAppConfig: IAppConfig =  {
     "playMusic.playError": "skip",
     "playMusic.whenDeviceRemoved": "play",
     "normal.taskbarThumb": "window",
+    "normal.alwaysOnTop": false,
     "normal.closeBehavior": "minimize",
     "normal.checkUpdate": true,
     "normal.checkPrerelease": false,

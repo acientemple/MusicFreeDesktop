@@ -12,6 +12,7 @@ import windowManager from "@main/window-manager";
 import AppConfig from "@shared/app-config/main";
 import TrayManager from "@main/tray-manager";
 import WindowDrag from "@shared/window-drag/main";
+import WindowResize from "@shared/window-resize/main";
 import { IAppConfig } from "@/types/app-config";
 import axios from "axios";
 import { HttpsProxyAgent } from "https-proxy-agent";
@@ -126,6 +127,7 @@ app.whenReady().then(async () => {
     PluginManager.setup(windowManager);
     TrayManager.setup(windowManager);
     WindowDrag.setup();
+    WindowResize.setup();
     setupMediaPermission();
     shortCut.setup().then(voidCallback);
     logger.logPerf("Create Main Window");
