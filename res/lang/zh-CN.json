@@ -128,7 +128,11 @@
     "reveal_local_music_in_file_explorer": "打开歌曲所在文件夹",
     "reveal_local_music_in_file_explorer_fail": "打开失败: ",
     "delete_local_downloaded_songs_success": "已删除 {{musicNums}} 首本地歌曲",
-    "delete_local_downloaded_song_success": "已删除本地歌曲 [{{songName}}]"
+    "delete_local_downloaded_song_success": "已删除本地歌曲 [{{songName}}]",
+    "fix_duration": "校正时长",
+    "fix_duration_success": "时长已校正为 {{duration}}",
+    "fix_duration_fail": "校正时长失败：{{reason}}",
+    "fix_duration_unknown": "没能拿到这首歌的时长，播放一次就会自动校正"
   },
   "search_result_page": {
     "search_result_title": "的搜索结果"
@@ -308,12 +312,14 @@
     "update_breaking_item3": "插件可用的依赖白名单缩小，依赖被移除的插件会失效。",
     "update_acknowledged": "我已知晓上述变更可能影响插件与数据",
     "update_result_success": "更新成功",
-    "update_result_failed": "更新失败，已回滚到原版本"
+    "update_result_failed": "更新失败，已回滚到原版本",
+    "music_video_search_keyword": "换个关键词搜索 MV"
   },
   "panel": {
     "play_list_song_num": "播放列表 ({{number}}首)",
     "user_variable": "用户变量",
-    "user_variable_setting_success": "设置成功~"
+    "user_variable_setting_success": "设置成功~",
+    "play_list_locate_not_found": "这首歌还不在任何歌单里，先收藏到歌单里就能定位了"
   },
   "music_sheet_like_view": {
     "play_all": "播放",
@@ -350,7 +356,8 @@
       "music_list_hide_columns": "歌曲列表隐藏列",
       "languages": "语言",
       "toast_switch_language_fail": "切换语言失败",
-      "check_prerelease": "检查更新时包含预发布版本（Beta）"
+      "check_prerelease": "检查更新时包含预发布版本（Beta）",
+      "always_on_top": "主窗口始终置顶（保持在其它窗口之上）"
     },
     "play_music": {
       "case_sensitive_in_search": "歌单内搜索时区分大小写",
