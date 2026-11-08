@@ -568,11 +568,13 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
     async getMusicVideoCandidates(
         musicItem: IMusic.IMusicItem,
         page = 1,
+        keyword?: string,
     ): Promise<IPlugin.IGetVideoCandidatesResult> {
         try {
             const result = await this.plugin.instance?.getMusicVideoCandidates?.(
                 resetMediaItem(musicItem, undefined, true),
                 page,
+                keyword,
             );
             if (!result || !Array.isArray(result.data)) {
                 throw new Error();

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Base from "../Base";
 import DraggableWindow from "../Base/DraggableWindow";
@@ -14,6 +14,7 @@ import { getMediaPrimaryKey, isSameMedia } from "@/common/media-util";
 import { applyMusicMeta } from "@/renderer/core/music-meta";
 import { clearMusicMv, setMusicMv, useMusicMv } from "@/renderer/core/music-mv";
 import trackPlayer from "@renderer/core/track-player";
+import SvgAsset from "@/renderer/components/SvgAsset";
 
 interface IProps {
     musicItem?: IMusic.IMusicItem;
@@ -40,6 +41,26 @@ export default function MusicVideoSearch(props: IProps) {
     const [loading, setLoading] = useState(true);
     const [items, setItems] = useState<IMusic.IMusicItem[]>([]);
     const [emptyText, setEmptyText] = useState<string | null>(null);
+    /** 输入框里的实时内容 */
+    const [keyword, setKeyword] = useState("");
+    /** 已经提交去检索的关键词，null 表示用默认的检索方式 */
+    const [submittedKeyword, setSubmittedKeyword] = useState<string | null>(
+        null,
+    );
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    /** 默认检索词：歌名 + 作者 */
+    const defaultKeyword = useMemo(() => {
+        const title = displayItem?.title ?? "";
+        const artist = displayItem?.artist ?? "";
+        return [title, artist].filter((it) => !!it).join(" ").trim();
+    }, [displayItem?.title, displayItem?.artist]);
+
+    // 换了曲子就把关键词重置回默认的
+    useEffect(() => {
+        setKeyword(defaultKeyword);
+        setSubmittedKeyword(null);
+    }, [defaultKeyword]);
 
     const plugins = useSupportedPlugin("getMusicVideoCandidates");
     // useSupportedPlugin 每次渲染都会返回新数组，取哈希串做依赖才不会反复触发
@@ -81,6 +102,7 @@ export default function MusicVideoSearch(props: IProps) {
                         "getMusicVideoCandidates",
                         target,
                         1,
+                        submittedKeyword?.trim() || undefined,
                     ),
                 ),
             );
@@ -102,7 +124,16 @@ export default function MusicVideoSearch(props: IProps) {
         return () => {
             canceled = true;
         };
-    }, [musicItem?.platform, musicItem?.id, pluginKey]);
+    }, [musicItem?.platform, musicItem?.id, pluginKey, submittedKeyword]);
+
+    const submitKeyword = () => {
+        const value = keyword.trim();
+        if (!value) {
+            return;
+        }
+        // 跟默认检索词一样就按默认方式来，让插件自己组关键词
+        setSubmittedKeyword(value === defaultKeyword ? null : value);
+    };
 
     return (
         <Base withBlur={false}>
@@ -113,7 +144,35 @@ export default function MusicVideoSearch(props: IProps) {
                 minWidth={420}
                 minHeight={320}
             >
-                <Base.Header>
+                <Base.Header
+                    extra={
+                        <div className="video-search-keyword">
+                            <input
+                                ref={inputRef}
+                                className="video-search-input"
+                                type="text"
+                                placeholder={t("modal.music_video_search_keyword")}
+                                value={keyword}
+                                onChange={(e) => {
+                                    setKeyword(e.target.value);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        submitKeyword();
+                                    }
+                                }}
+                            ></input>
+                            <div
+                                className="video-search-btn"
+                                role="button"
+                                title={t("modal.music_video_search")}
+                                onClick={submitKeyword}
+                            >
+                                <SvgAsset iconName="magnifying-glass"></SvgAsset>
+                            </div>
+                        </div>
+                    }
+                >
                     <div className="header-title">
                         {t("modal.music_video_search")}
                     </div>

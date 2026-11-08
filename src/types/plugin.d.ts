@@ -184,7 +184,9 @@ declare namespace IPlugin {
     /** 查找这首歌对应的 MV 候选 */
     getMusicVideoCandidates?: (
       musicItem: IMusic.IMusicItemPartial,
-      page?: number
+      page?: number,
+      /** 自定义检索关键词，替换默认的歌名 */
+      keyword?: string
     ) => Promise<IGetVideoCandidatesResult | null>;
   }
 

@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next";
 import { applyMusicMeta } from "@/renderer/core/music-meta";
 import SvgAsset from "@/renderer/components/SvgAsset";
 import { hideMVPlayer, useMVPlayerState } from "./store";
+import { isSameMedia } from "@/common/media-util";
+import { PlayerEvents } from "@renderer/core/track-player/enum";
 
 /** 画面与音频允许的偏差，超过就重新对齐 */
 const MAX_DRIFT = 0.4;
@@ -56,10 +58,10 @@ export default function MVPlayer() {
                 // 视频源普遍要校验 Referer，video 元素带不了请求头，只能走本地转发服务
                 const proxied = source.headers
                     ? ServiceManager.RequestForwarderService.forwardRequest(
-                          source.url,
-                          "GET",
-                          source.headers,
-                      )
+                        source.url,
+                        "GET",
+                        source.headers,
+                    )
                     : source.url;
                 setError(null);
                 setVideoUrl(proxied ?? source.url);
@@ -102,6 +104,25 @@ export default function MVPlayer() {
         if (musicItem?.platform && trackPlayer.currentMusic?.platform === musicItem.platform) {
             trackPlayer.resume();
         }
+    }, [musicItem]);
+
+    // 换歌了就没必要继续放上一首的 MV，直接收起来
+    useEffect(() => {
+        if (!musicItem) {
+            return;
+        }
+        const onMusicChanged = (item: IMusic.IMusicItem | null) => {
+            if (!item) {
+                return;
+            }
+            if (!isSameMedia(item, musicItem)) {
+                hideMVPlayer();
+            }
+        };
+        trackPlayer.on(PlayerEvents.MusicChanged, onMusicChanged);
+        return () => {
+            trackPlayer.off(PlayerEvents.MusicChanged, onMusicChanged);
+        };
     }, [musicItem]);
 
     // 收起时画面停掉省 CPU，声音是播放器在放，不受影响
@@ -205,6 +226,10 @@ export default function MVPlayer() {
                             if (video && isFinite(audioTime) && audioTime > 0) {
                                 video.currentTime = audioTime;
                             }
+                        }}
+                        onEnded={() => {
+                            // MV 放完就关掉弹窗，不用手动去点关闭
+                            hideMVPlayer();
                         }}
                     ></video>
                 ) : error ? (
