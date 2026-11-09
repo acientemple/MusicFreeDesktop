@@ -79,3 +79,28 @@ MUSICFREE_DEBUG_PORT=9225 ./MusicFree.exe      # 开 CDP 远程调试端口
 - 定位请求带 `sheetId`，只有对应歌单的 MusicList 会消费它，避免当前页面抢先消费。
 - 歌单页消费的逻辑在 `src/renderer/components/MusicList/index.tsx`（滚动 + `setActiveItems`）。
 
+## 唱卡拉OK
+
+| 文件 | 作用 |
+| --- | --- |
+| `src/renderer/utils/word-lyric.ts` | 逐字歌词解析：增强型 LRC（`<mm:ss.xx>`）、网易云 yrc / QQ qrc（`(start,duration,0)`）；都没有时按行均分生成「伪逐字」 |
+| `src/renderer/core/karaoke/recorder.ts` | 麦克风采集 + 自相关法测基频（降到 8k 再算，省算力），时间轴与播放进度对齐 |
+| `src/renderer/core/karaoke/scorer.ts` | 按词时间轴判定命中，算节奏 / 完整度 / 音高连贯性 |
+| `src/renderer/components/Modal/templates/Karaoke/` | 全屏 KTV 界面：逐字扫光、录音打分、伴奏切换 |
+
+要点：
+
+- **逐字歌词是「有则用真、无则伪造」**：插件能拿到词级时间戳就用真的（`ILyricSource.wordLyric`），
+  拿不到就按行内字数均分生成伪逐字，扫光效果照样有。公开接口目前基本不给真逐字
+  （网易云 klyric 要登录、QQ qrc 要登录 cookie、酷狗 KRC 是加密格式），
+  所以伪逐字是常态而不是异常。
+- 插件协议加方法要改三处：`src/types/plugin.d.ts`、`src/shared/plugin-manager/main/plugin-methods.ts`、
+  插件自身实现。`getInstrumental`（伴奏音源）就是走这套。
+- **换伴奏不动歌单**：用 `trackPlayer.switchAudioSource()` 只换声音，
+  `trackPlayer.getCurrentMediaSource()` 留着原唱音源好切回去。
+  切源后音频元数据还没就绪，直接设 `currentTime` 会被忽略，
+  所以 `audio-controller` 里加了 `pendingSeek`，等 `loadedmetadata` 再补跳。
+- 伴奏本身是另一首歌，所以 KTV 界面是挨个问一遍支持 `getInstrumental` 的插件，谁能给就用谁。
+- 录音打分受物理限制：放原唱时麦克风会拾到原唱，分数会虚高；用耳机跟唱、切到伴奏版会准得多。
+
+
