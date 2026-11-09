@@ -179,7 +179,8 @@
     "only_set_for_current_music": "Only for Current Song",
     "desktop_lyric": "Desktop Lyric",
     "play": "Play",
-    "pause": "Pause"
+    "pause": "Pause",
+    "karaoke": "Karaoke"
   },
   "music_detail": {
     "search_lyric": "Search Lyric",
@@ -313,7 +314,20 @@
     "scan_local_music": "Scan Local Music",
     "scan_local_music_hint": "Automatically scan selected folders (real-time sync with file changes)",
     "add_folder": "Add Folder",
-    "music_video_search_keyword": "Search MV with another keyword"
+    "music_video_search_keyword": "Search MV with another keyword",
+    "karaoke": "Karaoke",
+    "karaoke_no_lyric": "No lyrics for this song",
+    "karaoke_close": "Close",
+    "karaoke_toggle_translation": "Show / hide translation",
+    "karaoke_record": "Start singing",
+    "karaoke_stop": "Stop singing",
+    "karaoke_score_timing": "Timing",
+    "karaoke_score_coverage": "Coverage",
+    "karaoke_score_pitch": "Pitch",
+    "karaoke_instrumental": "Instrumental",
+    "karaoke_original": "Original",
+    "karaoke_no_instrumental": "No instrumental version found",
+    "karaoke_instrumental_failed": "Failed to switch to instrumental"
   },
   "panel": {
     "play_list_song_num": "Playlist ({{number}} songs)",

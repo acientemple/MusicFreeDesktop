@@ -38,6 +38,7 @@ export type SvgAssetIconNames =
     | "lyric"
     | "lyric-en"
     | "magnifying-glass"
+    | "microphone"
     | "minus"
     | "motion-play"
     | "musical-note"

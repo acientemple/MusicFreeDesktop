@@ -1,4 +1,5 @@
 import { getInternalData, resetMediaItem } from "@/common/media-util";
+import { hasWordTimestamp } from "@/common/lyric-util";
 import type { Plugin } from "./plugin";
 import { localFilePathSymbol } from "@/common/constant";
 import fs from "fs/promises";
@@ -165,11 +166,15 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         let rawLrc = musicItem.rawLrc;
         let lrcUrl = musicItem.lrc;
         let translation: string;
+        /** 逐字歌词，带词级时间戳 */
+        let wordLrc: string | undefined;
         // 如果存在文本
         if (rawLrc) {
             return {
                 rawLrc,
                 lrc: lrcUrl,
+                // 自带的歌词本来就带词级时间戳时，直接当逐字用
+                wordLyric: hasWordTimestamp(rawLrc) ? rawLrc : undefined,
             };
         }
         // 2. 读取路径下的同名lrc文件
@@ -202,6 +207,9 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
                             rawLrc,
                             translation,
                             lrc: lrcUrl,
+                            wordLyric: hasWordTimestamp(rawLrc)
+                                ? rawLrc
+                                : undefined,
                         };
                     }
                 }
@@ -228,6 +236,7 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
             rawLrc = lrcSource?.rawLrc;
             lrcUrl = lrcSource?.lrc || lrcUrl;
             translation = lrcSource?.translation;
+            wordLrc = lrcSource?.wordLyric;
 
             if (rawLrc || translation) {
                 if (!rawLrc) {
@@ -238,6 +247,7 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
                 return {
                     rawLrc,
                     translation,
+                    wordLyric: wordLrc ?? (hasWordTimestamp(rawLrc) ? rawLrc : undefined),
                 };
             }
         } catch (e: any) {
@@ -252,6 +262,7 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
                     rawLrc,
                     lrc: lrcUrl,
                     translation,
+                    wordLyric: hasWordTimestamp(rawLrc) ? rawLrc : undefined,
                 };
             } catch {
                 lrcUrl = undefined;
@@ -268,6 +279,28 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         // devLog('warn', '无歌词');
 
         return null;
+    }
+
+    /**
+     * 获取伴奏版音源。
+     * 唱卡拉OK 时把原唱换成纯伴奏，歌单与队列不受影响
+     */
+    async getInstrumental(
+        musicItem: IMusic.IMusicItem,
+    ): Promise<IPlugin.IMediaSourceResult | null> {
+        if (!this.plugin.instance.getInstrumental) {
+            return null;
+        }
+        try {
+            return (
+                (await this.plugin.instance.getInstrumental(
+                    resetMediaItem(musicItem, undefined, true),
+                )) ?? null
+            );
+        } catch (e: any) {
+            // 插件报错就当作没有伴奏
+            return null;
+        }
     }
 
     /** 获取专辑信息 */

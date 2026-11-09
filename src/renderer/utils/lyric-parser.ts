@@ -1,3 +1,11 @@
+import {
+    buildPseudoWordLyric,
+    getWordPosition,
+    IWordLyric,
+    IWordPosition,
+    parseWordLyric,
+} from "@renderer/utils/word-lyric";
+
 const timeReg = /\[[\d:.]+\]/g;
 const metaReg = /\[(.+):(.+)\]/g;
 
@@ -6,6 +14,8 @@ type LyricMeta = Record<string, any>;
 interface IOptions {
     musicItem?: IMusic.IMusicItem;
     translation?: string;
+    /** 逐字歌词原文，有词级时间戳时优先使用 */
+    wordLyric?: string;
 }
 
 export interface IParsedLrcItem {
@@ -28,6 +38,9 @@ export default class LyricParser {
     private lastSearchIndex = 0;
 
     public hasTranslation = false;
+
+    /** 逐字歌词时间轴，没有真逐字时是按行均分生成的伪逐字 */
+    private wordLyric: IWordLyric | null = null;
 
     get musicItem() {
         return this._musicItem;
@@ -71,6 +84,20 @@ export default class LyricParser {
                 ++p1;
             }
         }
+
+        // 逐字歌词：优先用带词级时间戳的原文，没有就按行均分生成伪逐字
+        const parsedWordLyric = parseWordLyric(options?.wordLyric);
+        this.wordLyric = parsedWordLyric ?? buildPseudoWordLyric(this.lrcItems);
+    }
+
+    /** 逐字歌词时间轴 */
+    getWordLyric(): IWordLyric | null {
+        return this.wordLyric;
+    }
+
+    /** 某一时刻的逐字进度 */
+    getWordPosition(position: number): IWordPosition {
+        return getWordPosition(this.wordLyric, position);
     }
 
     getPosition(position: number): IParsedLrcItem | null {

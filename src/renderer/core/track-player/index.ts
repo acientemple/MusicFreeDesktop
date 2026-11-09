@@ -418,6 +418,28 @@ class TrackPlayer {
     }
 
     /**
+     * 换用当前歌曲的另一个音源（比如唱卡拉OK 时放伴奏版）。
+     * 歌单与播放队列都不动，只是把声音换掉，并从当前进度接着播
+     */
+    public async switchAudioSource(mediaSource: IPlugin.IMediaSourceResult) {
+        const musicItem = this.currentMusic;
+        if (!musicItem || !mediaSource?.url) {
+            return false;
+        }
+        const position = this.progress.currentTime || 0;
+        this.setTrack(mediaSource, musicItem, {
+            autoPlay: true,
+            seekTo: position,
+        });
+        return true;
+    }
+
+    /** 当前正在用的音源，切回原唱时用得上 */
+    public getCurrentMediaSource() {
+        return this.lastMediaSource;
+    }
+
+    /**
      * 用新条目替换队列里的旧条目，保持原位置，并播放替换后的条目
      * @returns 队列里是否存在并替换了旧条目
      */
@@ -732,6 +754,8 @@ class TrackPlayer {
             const parser = new LyricParser(rawLrc, {
                 musicItem: currentMusic,
                 translation: lyricSource.translation,
+                // 插件给了逐字歌词就用真的，没有就按行均分生成伪逐字
+                wordLyric: lyricSource.wordLyric,
             });
 
             this.setCurrentLyric({

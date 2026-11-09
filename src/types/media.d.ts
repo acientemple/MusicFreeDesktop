@@ -171,6 +171,12 @@ declare namespace ILyric {
     lrc?: string;
     rawLrc?: string;
     translation?: string;
+    /**
+     * 逐字歌词原文（带词级时间戳）
+     * 格式支持增强型 LRC（<mm:ss.xx>）与 YRC/QRC（(start,duration,0)），
+     * 没有时由应用侧按行均分生成伪逐字
+     */
+    wordLyric?: string;
   }
 }
 

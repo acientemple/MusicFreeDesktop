@@ -179,7 +179,8 @@
     "only_set_for_current_music": "仅设置当前歌曲",
     "desktop_lyric": "桌面歌词",
     "play": "播放",
-    "pause": "暂停"
+    "pause": "暂停",
+    "karaoke": "唱卡拉OK"
   },
   "music_detail": {
     "search_lyric": "搜索歌词",
@@ -313,7 +314,20 @@
     "update_acknowledged": "我已知晓上述变更可能影响插件与数据",
     "update_result_success": "更新成功",
     "update_result_failed": "更新失败，已回滚到原版本",
-    "music_video_search_keyword": "换个关键词搜索 MV"
+    "music_video_search_keyword": "换个关键词搜索 MV",
+    "karaoke": "卡拉OK",
+    "karaoke_no_lyric": "这首歌还没有歌词",
+    "karaoke_close": "关闭",
+    "karaoke_toggle_translation": "显示/隐藏翻译",
+    "karaoke_record": "开始跟唱",
+    "karaoke_stop": "结束跟唱",
+    "karaoke_score_timing": "节奏",
+    "karaoke_score_coverage": "完整度",
+    "karaoke_score_pitch": "音高",
+    "karaoke_instrumental": "伴奏",
+    "karaoke_original": "原唱",
+    "karaoke_no_instrumental": "没找到这首歌的伴奏",
+    "karaoke_instrumental_failed": "伴奏切换失败"
   },
   "panel": {
     "play_list_song_num": "播放列表 ({{number}}首)",

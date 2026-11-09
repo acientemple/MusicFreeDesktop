@@ -27,6 +27,7 @@ export default function Extra() {
             <SpeedBtn></SpeedBtn>
             <VolumeBtn></VolumeBtn>
             <LyricBtn></LyricBtn>
+            <KaraokeBtn></KaraokeBtn>
             <div
                 className="extra-btn"
                 onClick={() => {
@@ -302,6 +303,23 @@ function LyricBtn() {
                 iconName={isCN() ? "lyric" : "lyric-en"}
                 title={t("music_bar.desktop_lyric")}
             ></SvgAsset>
+        </div>
+    );
+}
+
+function KaraokeBtn() {
+    const { t } = useTranslation();
+
+    return (
+        <div
+            className="extra-btn"
+            role="button"
+            title={t("music_bar.karaoke")}
+            onClick={() => {
+                showModal("Karaoke");
+            }}
+        >
+            <SvgAsset iconName="microphone" title={t("music_bar.karaoke")}></SvgAsset>
         </div>
     );
 }

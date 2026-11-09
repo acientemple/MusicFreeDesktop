@@ -141,6 +141,13 @@ declare namespace IPlugin {
     getLyric?: (
       musicItem: IMusic.IMusicItemPartial
     ) => Promise<ILyric.ILyricSource | null>;
+    /**
+     * 获取伴奏版音源（唱卡拉OK 时放纯伴奏），可选实现
+     * 返回的音源应当与原曲等长、时间轴一致
+     */
+    getInstrumental?: (
+      musicItem: IMusic.IMusicItemPartial
+    ) => Promise<IMediaSourceResult | null>;
     /** 获取专辑信息，里面的歌曲分页 */
     getAlbumInfo?: (
       albumItem: IAlbum.IAlbumItem,

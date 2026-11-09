@@ -1,0 +1,236 @@
+.karaoke-container {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.92) 0%,
+        rgba(0, 0, 0, 0.96) 60%,
+        rgba(0, 0, 0, 0.98) 100%
+    );
+    color: #fff;
+    user-select: none;
+    animation: karaoke-fade-in 0.25s ease;
+}
+
+@keyframes karaoke-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.karaoke-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px 0 40px;
+}
+
+.karaoke-title {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.karaoke-song-title {
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.karaoke-song-artist {
+    font-size: 14px;
+    opacity: 0.6;
+}
+
+.karaoke-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.karaoke-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    opacity: 0.65;
+    transition: all 0.2s ease;
+
+    &:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    &[data-active="true"] {
+        opacity: 1;
+        color: var(--primaryColor);
+    }
+
+    &[data-disabled="true"] {
+        opacity: 0.35;
+        pointer-events: none;
+    }
+}
+
+/** 带文字的按钮（比如原唱 / 伴奏） */
+.karaoke-btn-text {
+    width: auto;
+    height: 30px;
+    padding: 0 14px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-size: 14px;
+
+    &.active {
+        border-color: var(--primaryColor);
+        color: var(--primaryColor);
+    }
+}
+
+.karaoke-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 0 60px;
+    overflow: hidden;
+}
+
+.karaoke-lyric-line {
+    text-align: center;
+    line-height: 1.5;
+    transition: all 0.3s ease;
+
+    &[data-state="past"] {
+        font-size: 26px;
+        opacity: 0.28;
+    }
+
+    &[data-state="next"] {
+        font-size: 26px;
+        opacity: 0.4;
+    }
+
+    &[data-state="current"] {
+        font-size: 42px;
+        font-weight: 700;
+    }
+}
+
+/** 一个词（字） */
+.karaoke-word {
+    display: inline-block;
+    padding: 0 2px;
+    transition: color 0.15s linear;
+
+    &[data-state="sung"],
+    &[data-state="singing"] {
+        color: var(--primaryColor);
+    }
+}
+
+/**
+ * 正在唱的字：按进度用渐变填充，做出卡拉OK 的扫光效果
+ */
+.karaoke-word[data-state="singing"] {
+    background: linear-gradient(
+        90deg,
+        var(--primaryColor) 0%,
+        var(--primaryColor) calc(var(--karaoke-word-progress) * 100%),
+        rgba(255, 255, 255, 0.28) calc(var(--karaoke-word-progress) * 100%),
+        rgba(255, 255, 255, 0.28) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.karaoke-translation {
+    font-size: 18px;
+    opacity: 0.55;
+    text-align: center;
+    min-height: 26px;
+}
+
+.karaoke-empty {
+    font-size: 20px;
+    opacity: 0.5;
+}
+
+.karaoke-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px 28px 40px;
+}
+
+.karaoke-score-panel {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    min-height: 30px;
+}
+
+.karaoke-score-total {
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--primaryColor);
+}
+
+.karaoke-score-item {
+    font-size: 15px;
+    opacity: 0.65;
+}
+
+.karaoke-error {
+    font-size: 14px;
+    color: #ff8a80;
+}
+
+.karaoke-record-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: var(--primaryColor);
+        color: var(--primaryColor);
+    }
+
+    &.recording {
+        background: var(--primaryColor);
+        border-color: var(--primaryColor);
+        color: #fff;
+        animation: karaoke-record-pulse 1.4s ease-in-out infinite;
+    }
+}
+
+.karaoke-record-text {
+    white-space: nowrap;
+}
+
+@keyframes karaoke-record-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.65;
+    }
+}

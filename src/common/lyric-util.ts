@@ -669,3 +669,15 @@ export function isEmptyLyricSource(
     }
     return false;
 }
+
+/**
+ * 判断一段歌词里有没有词级时间戳。
+ * 增强型 LRC 用 <mm:ss.xxx> 标出每个词的起点，
+ * 有的话这份歌词本身就可以直接当逐字歌词用
+ */
+export function hasWordTimestamp(rawLrc?: string | null): boolean {
+    if (!rawLrc) {
+        return false;
+    }
+    return /<\d{1,3}:\d{1,2}(?:[.:]\d{1,3})?>/.test(rawLrc);
+}

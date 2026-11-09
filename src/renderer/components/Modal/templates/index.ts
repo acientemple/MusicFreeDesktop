@@ -5,6 +5,7 @@ import Base from "./Base";
 import EditMusicMeta from "./EditMusicMeta";
 import ExitConfirm from "./ExitConfirm";
 import ImportMusicSheet from "./ImportMusicSheet";
+import Karaoke from "./Karaoke";
 import MusicAlternatives from "./MusicAlternatives";
 import MusicVideoSearch from "./MusicVideoSearch";
 import PluginSubscription from "./PluginSubscription";
@@ -33,6 +34,7 @@ export default {
     SmartLyric,
     AudioRecognition,
     ImportMusicSheet,
+    Karaoke,
     MusicAlternatives,
     MusicVideoSearch,
     EditMusicMeta,

@@ -37,6 +37,13 @@ class AudioController extends ControllerBase implements IAudioController {
     /** 实际用于播放的地址，供声音识别复用 */
     public resolvedSourceUrl: string | null = null;
 
+    /**
+     * 切源后要跳转到的位置。
+     * 刚换地址时音频元数据还没加载好，直接设 currentTime 会被忽略，
+     * 这里先记下来，等 loadedmetadata 再跳
+     */
+    private pendingSeek: number | null = null;
+
     get hasSource() {
         return !!this.audio.src;
     }
@@ -82,6 +89,11 @@ class AudioController extends ControllerBase implements IAudioController {
         this.audio.onended = () => {
             this.playerState = PlayerState.Paused;
             this.onEnded?.();
+        };
+
+        // 刚换完音源时元数据才到货，这时候补上之前记下的跳转
+        this.audio.onloadedmetadata = () => {
+            this.applyPendingSeek();
         };
 
         this.audio.onvolumechange = () => {
@@ -142,13 +154,25 @@ class AudioController extends ControllerBase implements IAudioController {
     }
 
     seekTo(seconds: number): void {
-        if (this.hasSource && isFinite(seconds)) {
-            const duration = this.audio.duration;
-            this.audio.currentTime = Math.min(
-                seconds,
-                isNaN(duration) ? Infinity : duration,
-            );
+        this.pendingSeek = seconds;
+        this.applyPendingSeek();
+    }
+
+    /** 元数据就绪后补上之前记下的跳转 */
+    private applyPendingSeek() {
+        if (this.pendingSeek === null) {
+            return;
         }
+        if (!this.hasSource || !isFinite(this.pendingSeek)) {
+            return;
+        }
+        const duration = this.audio.duration;
+        if (isNaN(duration)) {
+            // 元数据还没加载好，等 loadedmetadata
+            return;
+        }
+        this.audio.currentTime = Math.min(this.pendingSeek, duration);
+        this.pendingSeek = null;
     }
 
     setLoop(isLoop: boolean): void {
