@@ -188,6 +188,16 @@ declare namespace IPlugin {
       /** 自定义检索关键词，替换默认的歌名 */
       keyword?: string
     ) => Promise<IGetAlternativesResult | null>;
+    /**
+     * 查找这首歌的伴奏版本（唱卡拉OK 时用）
+     * 返回的条目要能直接喂给 getMediaSource
+     */
+    getMusicInstrumentals?: (
+      musicItem: IMusic.IMusicItemPartial,
+      page?: number,
+      /** 自定义检索关键词，替换默认的歌名 */
+      keyword?: string
+    ) => Promise<IGetAlternativesResult | null>;
     /** 查找这首歌对应的 MV 候选 */
     getMusicVideoCandidates?: (
       musicItem: IMusic.IMusicItemPartial,

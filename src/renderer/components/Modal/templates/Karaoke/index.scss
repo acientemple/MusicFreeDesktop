@@ -174,6 +174,81 @@
     padding: 0 40px 28px 40px;
 }
 
+/** 伴奏候选列表 */
+.karaoke-candidates {
+    margin: 0 40px 14px 40px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    max-height: 230px;
+    display: flex;
+    flex-direction: column;
+}
+
+.karaoke-candidates-title {
+    font-size: 13px;
+    opacity: 0.55;
+    margin-bottom: 8px;
+}
+
+.karaoke-candidates-body {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.karaoke-candidates-empty {
+    font-size: 14px;
+    opacity: 0.5;
+    padding: 6px 0;
+}
+
+.karaoke-candidate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
+
+.karaoke-candidate-info {
+    text-align: left;
+    overflow: hidden;
+
+    .title {
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .artist {
+        font-size: 12px;
+        opacity: 0.55;
+    }
+}
+
+.karaoke-candidate-tags {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    opacity: 0.7;
+    white-space: nowrap;
+
+    .origin-tag {
+        color: var(--primaryColor);
+    }
+}
+
 .karaoke-score-panel {
     display: flex;
     align-items: baseline;

@@ -327,7 +327,10 @@
     "karaoke_instrumental": "伴奏",
     "karaoke_original": "原唱",
     "karaoke_no_instrumental": "沒找到這首歌的伴奏",
-    "karaoke_instrumental_failed": "伴奏切換失敗"
+    "karaoke_instrumental_failed": "伴奏切換失敗",
+    "karaoke_instrumental_list": "選擇伴奏版本",
+    "karaoke_origin_tag": "原唱伴奏",
+    "karaoke_duration_delta": "時長差 {{seconds}} 秒"
   },
   "panel": {
     "play_list_song_num": "播放清單（{{number}} 首歌曲）",

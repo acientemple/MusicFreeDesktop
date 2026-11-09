@@ -597,6 +597,31 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         }
     }
 
+    /**
+     * 查找伴奏版本（唱卡拉OK 时用）。
+     * 插件报错就当作没有伴奏
+     */
+    async getMusicInstrumentals(
+        musicItem: IMusic.IMusicItem,
+        page = 1,
+        keyword?: string,
+    ): Promise<IPlugin.IGetAlternativesResult | null> {
+        if (!this.plugin.instance.getMusicInstrumentals) {
+            return null;
+        }
+        try {
+            return (
+                (await this.plugin.instance.getMusicInstrumentals(
+                    resetMediaItem(musicItem, undefined, true),
+                    page,
+                    keyword,
+                )) ?? null
+            );
+        } catch (e: any) {
+            return null;
+        }
+    }
+
     /** 查找这首歌对应的 MV 候选 */
     async getMusicVideoCandidates(
         musicItem: IMusic.IMusicItem,

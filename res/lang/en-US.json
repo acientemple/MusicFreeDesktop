@@ -327,7 +327,10 @@
     "karaoke_instrumental": "Instrumental",
     "karaoke_original": "Original",
     "karaoke_no_instrumental": "No instrumental version found",
-    "karaoke_instrumental_failed": "Failed to switch to instrumental"
+    "karaoke_instrumental_failed": "Failed to switch to instrumental",
+    "karaoke_instrumental_list": "Choose an instrumental version",
+    "karaoke_origin_tag": "Original artist",
+    "karaoke_duration_delta": "{{seconds}}s difference"
   },
   "panel": {
     "play_list_song_num": "Playlist ({{number}} songs)",

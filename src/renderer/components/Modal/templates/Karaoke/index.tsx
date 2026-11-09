@@ -9,8 +9,14 @@ import classNames from "@/renderer/utils/classnames";
 import PluginManager from "@shared/plugin-manager/renderer";
 import { toast } from "react-toastify";
 import { KaraokeRecorder } from "@renderer/core/karaoke/recorder";
+import {
+    fetchInstrumentalCandidates,
+    IInstrumentalCandidate,
+    switchToInstrumental,
+} from "@renderer/core/karaoke/instrumental";
 import { IScoreResult, scorePerformance, scoreUpTo } from "@renderer/core/karaoke/scorer";
 import SvgAsset from "@/renderer/components/SvgAsset";
+import Loading from "@/renderer/components/Loading";
 import "./index.scss";
 
 /** 一行歌词的显示状态 */
@@ -88,6 +94,10 @@ export default function Karaoke() {
     const [switching, setSwitching] = useState(false);
     /** 切伴奏之前用的原唱音源，切回来时用 */
     const originalSourceRef = useRef<IPlugin.IMediaSourceResult | null>(null);
+    /** 伴奏候选列表 */
+    const [candidates, setCandidates] = useState<IInstrumentalCandidate[]>([]);
+    const [candidatesOpen, setCandidatesOpen] = useState(false);
+    const [candidatesLoading, setCandidatesLoading] = useState(false);
 
     useEffect(() => {
         let raf = 0;
@@ -194,53 +204,58 @@ export default function Karaoke() {
 
     /**
      * 原唱 / 伴奏切换。
-     * 伴奏本身是另一首歌，所以不限定当前歌曲来自哪个平台，
-     * 挨个问一遍支持 getInstrumental 的插件，谁能给就用谁。
-     * 拿不到就提示一句，不影响继续唱
+     *
+     * 点「伴奏」时先把候选列表拉出来让人挑，
+     * 已经在伴奏上了就点回原唱。
      */
     const toggleInstrumental = async () => {
         if (!musicItem?.platform || switching) {
             return;
         }
+        if (instrumental) {
+            // 已经切到伴奏，点一下回到原唱
+            const original = originalSourceRef.current;
+            if (original) {
+                setSwitching(true);
+                await trackPlayer.switchAudioSource(original);
+                setSwitching(false);
+                setInstrumental(false);
+            }
+            return;
+        }
+        // 展开候选列表
+        setCandidatesOpen((prev) => !prev);
+        if (!candidates.length) {
+            setCandidatesLoading(true);
+            try {
+                const list = await fetchInstrumentalCandidates(musicItem);
+                setCandidates(list);
+                if (!list.length) {
+                    toast.info(t("modal.karaoke_no_instrumental"));
+                }
+            } catch (e: any) {
+                toast.error(t("modal.karaoke_instrumental_failed"));
+            } finally {
+                setCandidatesLoading(false);
+            }
+        }
+    };
+
+    /** 选中某个伴奏候选，换过去 */
+    const applyInstrumental = async (candidate: IInstrumentalCandidate) => {
         setSwitching(true);
         try {
-            if (instrumental) {
-                const original = originalSourceRef.current;
-                if (original) {
-                    await trackPlayer.switchAudioSource(original);
-                    setInstrumental(false);
-                }
-                return;
-            }
-            const plugins = PluginManager.getSupportedPlugin("getInstrumental");
-            let source: IPlugin.IMediaSourceResult | null = null;
-            for (const plugin of plugins) {
-                try {
-                    const result =
-                        await PluginManager.callPluginDelegateMethod(
-                            { hash: plugin.hash },
-                            "getInstrumental",
-                            musicItem,
-                        );
-                    if (result?.url) {
-                        source = result;
-                        break;
-                    }
-                } catch (e) {
-                    // 这个插件取不到，试下一个
-                }
-            }
-            if (!source?.url) {
-                toast.info(t("modal.karaoke_no_instrumental"));
-                return;
-            }
-            originalSourceRef.current = trackPlayer.getCurrentMediaSource();
-            const ok = await trackPlayer.switchAudioSource(source);
-            if (ok) {
-                setInstrumental(true);
-            } else {
+            const ok = await switchToInstrumental(candidate);
+            if (!ok) {
                 toast.error(t("modal.karaoke_instrumental_failed"));
+                return;
             }
+            // 记住原唱音源，好切回去
+            if (!originalSourceRef.current) {
+                originalSourceRef.current = trackPlayer.getCurrentMediaSource();
+            }
+            setInstrumental(true);
+            setCandidatesOpen(false);
         } catch {
             toast.error(t("modal.karaoke_instrumental_failed"));
         } finally {
@@ -252,6 +267,8 @@ export default function Karaoke() {
     useEffect(() => {
         setInstrumental(false);
         originalSourceRef.current = null;
+        setCandidates([]);
+        setCandidatesOpen(false);
     }, [musicItem?.platform, musicItem?.id]);
 
     return (
@@ -332,6 +349,80 @@ export default function Karaoke() {
                     </div>
                 )}
             </div>
+
+            {candidatesOpen ? (
+                <div className="karaoke-candidates">
+                    <div className="karaoke-candidates-title">
+                        {t("modal.karaoke_instrumental_list")}
+                    </div>
+                    {candidatesLoading ? (
+                        <Loading></Loading>
+                    ) : candidates.length ? (
+                        <div className="karaoke-candidates-body">
+                            {candidates.map((item) => {
+                                const delta = Math.abs(
+                                    Number(item.durationDelta) || 0,
+                                );
+                                return (
+                                    <div
+                                        className="karaoke-candidate"
+                                        key={`${item.platform}-${item.id}`}
+                                        role="button"
+                                        onClick={() => {
+                                            void applyInstrumental(item);
+                                        }}
+                                    >
+                                        <div className="karaoke-candidate-info">
+                                            <div className="title">
+                                                {item.title}
+                                            </div>
+                                            <div className="artist">
+                                                {item.artist || "-"}
+                                            </div>
+                                        </div>
+                                        <div className="karaoke-candidate-tags">
+                                            <div className="source-tag">
+                                                {PluginManager.getPluginDisplayName(
+                                                    item.platform,
+                                                )}
+                                            </div>
+                                            {item.isOriginArtist ? (
+                                                <div className="origin-tag">
+                                                    {t(
+                                                        "modal.karaoke_origin_tag",
+                                                    )}
+                                                </div>
+                                            ) : null}
+                                            {item.duration ? (
+                                                <div className="duration">
+                                                    {Math.floor(item.duration / 60)}:
+                                                    {(
+                                                        item.duration % 60
+                                                    )
+                                                        .toString()
+                                                        .padStart(2, "0")}
+                                                </div>
+                                            ) : null}
+                                            {delta > 0 ? (
+                                                <div className="delta">
+                                                    {t(
+                                                        "modal.karaoke_duration_delta",
+                                                        { seconds: delta },
+                                                    )}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="karaoke-candidates-empty">
+                            {t("modal.karaoke_no_instrumental")}
+                        </div>
+                    )}
+                </div>
+            ) : null}
 
             <div className="karaoke-footer">
                 <div className="karaoke-score-panel">
