@@ -86,7 +86,9 @@ MUSICFREE_DEBUG_PORT=9225 ./MusicFree.exe      # 开 CDP 远程调试端口
 | `src/renderer/utils/word-lyric.ts` | 逐字歌词解析：增强型 LRC（`<mm:ss.xx>`）、网易云 yrc / QQ qrc（`(start,duration,0)`）；都没有时按行均分生成「伪逐字」 |
 | `src/renderer/core/karaoke/recorder.ts` | 麦克风采集 + 自相关法测基频（降到 8k 再算，省算力），时间轴与播放进度对齐 |
 | `src/renderer/core/karaoke/scorer.ts` | 按词时间轴判定命中，算节奏 / 完整度 / 音高连贯性 |
-| `src/renderer/components/Modal/templates/Karaoke/` | 全屏 KTV 界面：逐字扫光、录音打分、伴奏切换 |
+| `src/renderer/core/karaoke/instrumental.ts` | 伴奏候选：挨个问支持 `getMusicInstrumentals` 的插件，合并去重排序 |
+| `src/renderer/core/karaoke/mixer.ts` | 混音：伴奏用独立 audio 元素与主播放器同时播，定时对齐进度，两个推子各调各的 |
+| `src/renderer/components/Modal/templates/Karaoke/` | 全屏 KTV 界面：逐字扫光、录音打分、人声/伴奏双推子 |
 
 要点：
 
@@ -96,11 +98,17 @@ MUSICFREE_DEBUG_PORT=9225 ./MusicFree.exe      # 开 CDP 远程调试端口
   所以伪逐字是常态而不是异常。
 - 插件协议加方法要改三处：`src/types/plugin.d.ts`、`src/shared/plugin-manager/main/plugin-methods.ts`、
   插件自身实现。`getInstrumental`（伴奏音源）就是走这套。
-- **换伴奏不动歌单**：用 `trackPlayer.switchAudioSource()` 只换声音，
-  `trackPlayer.getCurrentMediaSource()` 留着原唱音源好切回去。
-  切源后音频元数据还没就绪，直接设 `currentTime` 会被忽略，
-  所以 `audio-controller` 里加了 `pendingSeek`，等 `loadedmetadata` 再补跳。
-- 伴奏本身是另一首歌，所以 KTV 界面是挨个问一遍支持 `getInstrumental` 的插件，谁能给就用谁。
-- 录音打分受物理限制：放原唱时麦克风会拾到原唱，分数会虚高；用耳机跟唱、切到伴奏版会准得多。
+- **混音是双轨叠加，不是换轨**：主播放器放原唱，伴奏用 `mixer.ts` 里的第二个 audio 元素同时播。
+  人声推子调原唱轨、伴奏推子调伴奏轨，可以只留伴奏，也可以两层一起听。
+- **本地增益不能污染全局音量**：`audio-controller` 把音量拆成「全局音量 × 本地增益」两个因子，
+  `audio.volume` 是最终值。`onvolumechange` 只在音量被外部改掉时才上报，
+  内部改的（混音推子）一律忽略，否则会把增益写进用户偏好。
+- **两条轨会各自漂移**：`mixer.ts` 每 500ms 比一次进度，偏差超过 0.4 秒就重新对齐
+  （与 MV 播放器同一个思路）。播放状态与倍速也跟着主播放器走。
+- 伴奏本身是另一首歌，所以 KTV 界面是挨个问一遍支持 `getMusicInstrumentals` 的插件，合并去重后让人挑。
+  候选带两个标记：`isKaraoke`（人声被分离出来当引导声的伴唱轨）与 `hasMv`（带 MV 画面），
+  排序时优先给这两类资源。四个源的 `isKaraoke` 语义要一致：
+  伴奏 / 纯音乐属于「人声被整个拿掉」的纯器乐，不算伴唱。
+- 录音打分受物理限制：放原唱时麦克风会拾到原唱，分数会虚高；用耳机跟唱、压低人声会准得多。
 
 
