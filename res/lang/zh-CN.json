@@ -330,7 +330,15 @@
     "karaoke_instrumental_failed": "伴奏切换失败",
     "karaoke_instrumental_list": "选择伴奏版本",
     "karaoke_origin_tag": "原唱伴奏",
-    "karaoke_duration_delta": "时长差 {{seconds}} 秒"
+    "karaoke_duration_delta": "时长差 {{seconds}} 秒",
+    "karaoke_stop_instrumental": "停止伴奏",
+    "karaoke_vocal": "人声",
+    "karaoke_accompaniment": "伴奏",
+    "karaoke_preset_original": "原唱",
+    "karaoke_preset_karaoke": "卡拉OK",
+    "karaoke_preset_instrumental": "纯伴奏",
+    "karaoke_karaoke_tag": "伴唱",
+    "karaoke_mv_tag": "MV"
   },
   "panel": {
     "play_list_song_num": "播放列表 ({{number}}首)",

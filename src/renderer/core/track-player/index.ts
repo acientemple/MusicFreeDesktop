@@ -556,6 +556,14 @@ class TrackPlayer {
         this.audioController.setVolume(volume);
     }
 
+    /**
+     * 本地增益：唱卡拉OK 时单独调人声响度，
+     * 不影响全局音量与用户偏好
+     */
+    public setLocalGain(gain: number) {
+        this.audioController.setLocalGain?.(gain);
+    }
+
     public setSpeed(speed: number) {
         this.audioController.setSpeed(speed);
     }

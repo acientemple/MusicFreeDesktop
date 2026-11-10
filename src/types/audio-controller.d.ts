@@ -27,6 +27,9 @@ export interface IAudioController {
     // 设置音量
     setVolume(volume: number): void;
 
+    // 设置本地增益（唱卡拉OK 的人声推子，不写用户偏好）
+    setLocalGain?(gain: number): void;
+
     // 跳转
     seekTo(seconds: number): void;
 

@@ -605,7 +605,7 @@ export default class PluginMethods implements IPlugin.IPluginInstanceMethods {
         musicItem: IMusic.IMusicItem,
         page = 1,
         keyword?: string,
-    ): Promise<IPlugin.IGetAlternativesResult | null> {
+    ): Promise<IPlugin.IGetInstrumentalsResult | null> {
         if (!this.plugin.instance.getMusicInstrumentals) {
             return null;
         }

@@ -44,6 +44,16 @@ class AudioController extends ControllerBase implements IAudioController {
      */
     private pendingSeek: number | null = null;
 
+    /**
+     * 全局音量（用户偏好里的那个）。
+     * audio.volume 是最终值 = 全局音量 × 本地增益，
+     * 拆成两个因子，唱卡拉OK 时才好在不污染用户偏好的前提下单独调人声
+     */
+    private userVolume = 1;
+
+    /** 本地增益：唱卡拉OK 的人声推子，1 表示不调整 */
+    private localGain = 1;
+
     get hasSource() {
         return !!this.audio.src;
     }
@@ -97,7 +107,14 @@ class AudioController extends ControllerBase implements IAudioController {
         };
 
         this.audio.onvolumechange = () => {
-            this.onVolumeChange?.(this.audio.volume);
+            // 只有当音量被外部改掉时才当成全局音量变化。
+            // 我们自己算出来的最终音量会被忽略，免得把混音增益写进用户偏好
+            const expected = this.getEffectiveVolume();
+            if (Math.abs(this.audio.volume - expected) < 0.001) {
+                return;
+            }
+            this.userVolume = this.audio.volume;
+            this.onVolumeChange?.(this.userVolume);
         };
 
         this.audio.onratechange = () => {
@@ -303,6 +320,31 @@ class AudioController extends ControllerBase implements IAudioController {
     }
 
     setVolume(volume: number): void {
+        this.userVolume = Math.min(1, Math.max(0, Number(volume) || 0));
+        this.applyEffectiveVolume();
+        // 主动上报，避免 volumechange 事件因为音量没变而不触发
+        this.onVolumeChange?.(this.userVolume);
+    }
+
+    /**
+     * 本地增益（唱卡拉OK 的人声推子）。
+     * 不写用户偏好，只影响当前这次播放
+     */
+    setLocalGain(gain: number): void {
+        this.localGain = Math.min(1, Math.max(0, Number(gain) || 0));
+        this.applyEffectiveVolume();
+    }
+
+    /** 全局音量 × 本地增益 */
+    private getEffectiveVolume(): number {
+        return Math.min(1, Math.max(0, this.userVolume * this.localGain));
+    }
+
+    private applyEffectiveVolume(): void {
+        const volume = this.getEffectiveVolume();
+        if (Math.abs(this.audio.volume - volume) < 0.001) {
+            return;
+        }
         this.audio.volume = volume;
     }
 }

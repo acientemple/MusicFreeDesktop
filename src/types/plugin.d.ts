@@ -81,6 +81,27 @@ declare namespace IPlugin {
     data: IMusic.IMusicItem[];
   }
 
+  /**
+   * 伴奏候选条目。
+   * 除了普通音乐条目的字段，还带几个用于挑选的标记
+   */
+  interface IMusicInstrumentalItem extends IMusic.IMusicItem {
+    /** 是不是原唱歌手发布的伴奏 */
+    isOriginArtist?: boolean;
+    /** 与原曲的时长差（秒） */
+    durationDelta?: number | null;
+    /** 这个资源带不带 MV 画面 */
+    hasMv?: boolean;
+    /** 是不是卡拉OK伴唱（人声可分离） */
+    isKaraoke?: boolean;
+  }
+
+  /** 伴奏候选结果 */
+  interface IGetInstrumentalsResult {
+    isEnd?: boolean;
+    data: IMusicInstrumentalItem[];
+  }
+
   /** 可直接下载的视频源，需要是音视频合一的单个文件 */
   interface IVideoDownloadSourceResult {
     url: string;
@@ -197,7 +218,7 @@ declare namespace IPlugin {
       page?: number,
       /** 自定义检索关键词，替换默认的歌名 */
       keyword?: string
-    ) => Promise<IGetAlternativesResult | null>;
+    ) => Promise<IGetInstrumentalsResult | null>;
     /** 查找这首歌对应的 MV 候选 */
     getMusicVideoCandidates?: (
       musicItem: IMusic.IMusicItemPartial,

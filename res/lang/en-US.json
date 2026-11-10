@@ -330,7 +330,15 @@
     "karaoke_instrumental_failed": "Failed to switch to instrumental",
     "karaoke_instrumental_list": "Choose an instrumental version",
     "karaoke_origin_tag": "Original artist",
-    "karaoke_duration_delta": "{{seconds}}s difference"
+    "karaoke_duration_delta": "{{seconds}}s difference",
+    "karaoke_stop_instrumental": "Stop Accompaniment",
+    "karaoke_vocal": "Vocals",
+    "karaoke_accompaniment": "Accompaniment",
+    "karaoke_preset_original": "Original",
+    "karaoke_preset_karaoke": "Karaoke",
+    "karaoke_preset_instrumental": "Instrumental",
+    "karaoke_karaoke_tag": "Guide Vocal",
+    "karaoke_mv_tag": "MV"
   },
   "panel": {
     "play_list_song_num": "Playlist ({{number}} songs)",

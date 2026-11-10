@@ -12,15 +12,19 @@ import { KaraokeRecorder } from "@renderer/core/karaoke/recorder";
 import {
     fetchInstrumentalCandidates,
     IInstrumentalCandidate,
-    switchToInstrumental,
 } from "@renderer/core/karaoke/instrumental";
+import mixer from "@renderer/core/karaoke/mixer";
 import { IScoreResult, scorePerformance, scoreUpTo } from "@renderer/core/karaoke/scorer";
 import SvgAsset from "@/renderer/components/SvgAsset";
 import Loading from "@/renderer/components/Loading";
+import Slider from "rc-slider";
 import "./index.scss";
 
 /** 一行歌词的显示状态 */
 type ILineState = "past" | "current" | "next";
+
+/** 混音预设 */
+type IMixPreset = "original" | "karaoke" | "instrumental";
 
 interface ILyricLineProps {
     line?: IWordLyricLine;
@@ -90,14 +94,20 @@ export default function Karaoke() {
     const [recordError, setRecordError] = useState<string | null>(null);
 
     /** 伴奏相关 */
-    const [instrumental, setInstrumental] = useState(false);
     const [switching, setSwitching] = useState(false);
-    /** 切伴奏之前用的原唱音源，切回来时用 */
-    const originalSourceRef = useRef<IPlugin.IMediaSourceResult | null>(null);
+    /** 伴奏轨是不是正在播 */
+    const [instrumentalActive, setInstrumentalActive] = useState(false);
     /** 伴奏候选列表 */
     const [candidates, setCandidates] = useState<IInstrumentalCandidate[]>([]);
     const [candidatesOpen, setCandidatesOpen] = useState(false);
     const [candidatesLoading, setCandidatesLoading] = useState(false);
+
+    /** 人声推子：调原唱轨的增益，0~1 */
+    const [vocalGain, setVocalGain] = useState(1);
+    /** 伴奏推子：调伴奏轨的增益，0~1 */
+    const [instrumentalGain, setInstrumentalGain] = useState(1);
+    /** 用户手动动过推子没有，动过就不再自动套预设 */
+    const mixerTouchedRef = useRef(false);
 
     useEffect(() => {
         let raf = 0;
@@ -171,13 +181,25 @@ export default function Karaoke() {
         };
     }, [recording, allWords]);
 
-    // 关掉界面时把麦克风还回去
+    // 关掉界面时把麦克风还回去，伴奏轨与人声增益也一并复位
     useEffect(() => {
         return () => {
             recorderRef.current?.stop();
             recorderRef.current = null;
+            mixer.stop();
+            trackPlayer.setLocalGain(1);
         };
     }, []);
+
+    // 人声推子作用在主播放器上，不写用户偏好
+    useEffect(() => {
+        trackPlayer.setLocalGain(vocalGain);
+    }, [vocalGain]);
+
+    // 伴奏推子作用在伴奏轨上
+    useEffect(() => {
+        mixer.setGain(instrumentalGain);
+    }, [instrumentalGain]);
 
     const toggleRecording = async () => {
         setRecordError(null);
@@ -203,24 +225,18 @@ export default function Karaoke() {
     };
 
     /**
-     * 原唱 / 伴奏切换。
-     *
-     * 点「伴奏」时先把候选列表拉出来让人挑，
-     * 已经在伴奏上了就点回原唱。
+     * 伴奏按钮：
+     * 伴奏轨已经在跑就停下来，否则展开候选列表让人挑
      */
     const toggleInstrumental = async () => {
         if (!musicItem?.platform || switching) {
             return;
         }
-        if (instrumental) {
-            // 已经切到伴奏，点一下回到原唱
-            const original = originalSourceRef.current;
-            if (original) {
-                setSwitching(true);
-                await trackPlayer.switchAudioSource(original);
-                setSwitching(false);
-                setInstrumental(false);
-            }
+        if (instrumentalActive) {
+            setSwitching(true);
+            mixer.stop();
+            setInstrumentalActive(false);
+            setSwitching(false);
             return;
         }
         // 展开候选列表
@@ -233,7 +249,7 @@ export default function Karaoke() {
                 if (!list.length) {
                     toast.info(t("modal.karaoke_no_instrumental"));
                 }
-            } catch (e: any) {
+            } catch {
                 toast.error(t("modal.karaoke_instrumental_failed"));
             } finally {
                 setCandidatesLoading(false);
@@ -241,21 +257,25 @@ export default function Karaoke() {
         }
     };
 
-    /** 选中某个伴奏候选，换过去 */
+    /**
+     * 选中某个伴奏候选。
+     * 伴奏用一个独立的音轨与原唱同时播，两边各有一个推子
+     */
     const applyInstrumental = async (candidate: IInstrumentalCandidate) => {
         setSwitching(true);
         try {
-            const ok = await switchToInstrumental(candidate);
+            const ok = await mixer.load(candidate);
             if (!ok) {
                 toast.error(t("modal.karaoke_instrumental_failed"));
                 return;
             }
-            // 记住原唱音源，好切回去
-            if (!originalSourceRef.current) {
-                originalSourceRef.current = trackPlayer.getCurrentMediaSource();
-            }
-            setInstrumental(true);
+            setInstrumentalActive(true);
             setCandidatesOpen(false);
+            // 用户没手动调过推子时，直接进卡拉OK的混音状态
+            if (!mixerTouchedRef.current) {
+                setVocalGain(0.35);
+                setInstrumentalGain(1);
+            }
         } catch {
             toast.error(t("modal.karaoke_instrumental_failed"));
         } finally {
@@ -263,12 +283,34 @@ export default function Karaoke() {
         }
     };
 
-    // 换歌了就回到原唱
+    /** 混音预设 */
+    const applyPreset = (preset: IMixPreset) => {
+        mixerTouchedRef.current = true;
+        switch (preset) {
+            case "original":
+                setVocalGain(1);
+                setInstrumentalGain(0);
+                break;
+            case "karaoke":
+                setVocalGain(0.35);
+                setInstrumentalGain(1);
+                break;
+            case "instrumental":
+                setVocalGain(0);
+                setInstrumentalGain(1);
+                break;
+        }
+    };
+
+    // 换歌了就回到原唱，伴奏轨也停掉
     useEffect(() => {
-        setInstrumental(false);
-        originalSourceRef.current = null;
+        mixer.stop();
+        setInstrumentalActive(false);
         setCandidates([]);
         setCandidatesOpen(false);
+        mixerTouchedRef.current = false;
+        setVocalGain(1);
+        setInstrumentalGain(1);
     }, [musicItem?.platform, musicItem?.id]);
 
     return (
@@ -287,12 +329,12 @@ export default function Karaoke() {
                         className={classNames({
                             "karaoke-btn": true,
                             "karaoke-btn-text": true,
-                            active: instrumental,
+                            active: instrumentalActive,
                         })}
                         role="button"
                         title={
-                            instrumental
-                                ? t("modal.karaoke_original")
+                            instrumentalActive
+                                ? t("modal.karaoke_stop_instrumental")
                                 : t("modal.karaoke_instrumental")
                         }
                         data-disabled={switching}
@@ -300,8 +342,8 @@ export default function Karaoke() {
                             void toggleInstrumental();
                         }}
                     >
-                        {instrumental
-                            ? t("modal.karaoke_original")
+                        {instrumentalActive
+                            ? t("modal.karaoke_stop_instrumental")
                             : t("modal.karaoke_instrumental")}
                     </div>
                     <div
@@ -350,6 +392,66 @@ export default function Karaoke() {
                 )}
             </div>
 
+            {/** 人声与伴奏分开调，两个音轨同时响就能混出想要的效果 */}
+            <div className="karaoke-mixer">
+                <div className="karaoke-mixer-row">
+                    <span className="karaoke-mixer-label">
+                        {t("modal.karaoke_vocal")}
+                    </span>
+                    <div className="karaoke-mixer-slider">
+                        <Slider
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            value={vocalGain}
+                            onChange={(value) => {
+                                mixerTouchedRef.current = true;
+                                setVocalGain(value as number);
+                            }}
+                        />
+                    </div>
+                    <span className="karaoke-mixer-value">
+                        {Math.round(vocalGain * 100)}%
+                    </span>
+                </div>
+                <div className="karaoke-mixer-row">
+                    <span className="karaoke-mixer-label">
+                        {t("modal.karaoke_accompaniment")}
+                    </span>
+                    <div className="karaoke-mixer-slider">
+                        <Slider
+                            min={0}
+                            max={1}
+                            step={0.01}
+                            value={instrumentalGain}
+                            onChange={(value) => {
+                                mixerTouchedRef.current = true;
+                                setInstrumentalGain(value as number);
+                            }}
+                        />
+                    </div>
+                    <span className="karaoke-mixer-value">
+                        {Math.round(instrumentalGain * 100)}%
+                    </span>
+                </div>
+                <div className="karaoke-mixer-presets">
+                    {(
+                        ["original", "karaoke", "instrumental"] as IMixPreset[]
+                    ).map((preset) => (
+                        <div
+                            className="karaoke-preset"
+                            key={preset}
+                            role="button"
+                            onClick={() => {
+                                applyPreset(preset);
+                            }}
+                        >
+                            {t(`modal.karaoke_preset_${preset}`)}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {candidatesOpen ? (
                 <div className="karaoke-candidates">
                     <div className="karaoke-candidates-title">
@@ -386,6 +488,18 @@ export default function Karaoke() {
                                                     item.platform,
                                                 )}
                                             </div>
+                                            {item.isKaraoke ? (
+                                                <div className="karaoke-tag">
+                                                    {t(
+                                                        "modal.karaoke_karaoke_tag",
+                                                    )}
+                                                </div>
+                                            ) : null}
+                                            {item.hasMv ? (
+                                                <div className="mv-tag">
+                                                    {t("modal.karaoke_mv_tag")}
+                                                </div>
+                                            ) : null}
                                             {item.isOriginArtist ? (
                                                 <div className="origin-tag">
                                                     {t(
